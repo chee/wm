@@ -1,0 +1,15 @@
+{
+	"name": "wm",
+	"version": "1.0.0",
+	"description": "window manager",
+	"main": "index.js",
+	"author": "chee <chee@snake.dog>",
+	"license": "GPL",
+	"dependencies": {
+		"ewmh": "^0.3.0",
+		"rc": "^1.1.6",
+		"rec2": "^1.2.0",
+		"vec2": "^1.6.0",
+		"x11": "^2.2.0"
+	}
+}

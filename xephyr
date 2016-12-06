@@ -1,0 +1,5 @@
+#!/bin/sh
+Xephyr :1 &
+DISPLAY=:1 konsole &
+DISPLAY=:1 konsole &
+DISPLAY=:1 node .

@@ -10,7 +10,9 @@ module.exports = class {
   }
 
   addWindow(id) {
-    this.windows.push(id)
+    const window = new Window(this.X, id)
+    this.windows.push(window)
+    window.show()
   }
 
   show() {
@@ -19,10 +21,10 @@ module.exports = class {
     } else {
       //this.X.SetInputFocus(this.root)
     }
-    this.windows.forEach(id => new Window(this.X, id).show())
+    this.windows.forEach(window => window.show())
   }
 
   hide() {
-    this.windows.forEach(id => new Window(this.X, id).hide())
+    this.windows.forEach(window => window.hide())
   }
 }

@@ -29,25 +29,30 @@ const keybindings = (() => {
 
 process.env.PATH = `${process.argv[1]}/bin:${process.env.PATH}`
 
+console.error = error => {
+  fs.writeFile('/tmp/error', util.inspect(error), console.log)
+}
+
 let start
 let attributes
 let child
 let X
 let workspaces
+let current_workspace = 0
+let root
 
 x11.createClient((error, display) => {
   X = display.client
   const screen = display.screen[0]
-  const root = screen.root
+  root = screen.root
 
   workspaces = [
     new Workspace(X, screen),
     new Workspace(X, screen),
+    new Workspace(X, screen),
+    new Workspace(X, screen),
     new Workspace(X, screen)
   ]
-
-
-  workspaces[1].addWindow
 
   keybindings.forEach(binding => {
     X.GrabKey(root, true,
@@ -66,21 +71,23 @@ x11.createClient((error, display) => {
     GRAB_MODE_ASYNC, GRAB_MODE_ASYNC, NOTHING, NOTHING, 3, keys.buttons.M
   )
 }).on('event', event => {
-  fs.writeFile('/tmp/event', util.inspect(event))
+  fs.writeFile('/tmp/event', util.inspect(event), console.error)
   child = event.child
-  if (event.name == 'KeyPress' && event.child != 0) {
-    keybindings.forEach(binding => {
+  switch(event.name) {
+  case 'KeyPress':
+    return keybindings.forEach(binding => {
       if (event.buttons == binding.buttons && event.keycode == binding.keycode) {
         exec(binding.cmd, console.log)
       }
     })
-  } else if (event.name == 'ButtonPress' && event.child != 0) {
+  case 'ButtonPress':
     X.RaiseWindow(event.child)
-    X.GetGeometry(event.child, (error, attr) => {
+    return X.GetGeometry(event.child, (error, attr) => {
       start = event
       attributes = attr
     })
-  } else if (event.name == 'MotionNotify' && start) {
+  case 'MotionNotify':
+    if (!start) return
     const xdiff = event.rootx - start.rootx
     const ydiff = event.rooty - start.rooty
     start.keycode == 1 && X.MoveWindow(
@@ -88,27 +95,64 @@ x11.createClient((error, display) => {
       attributes.xPos + (start.keycode == 1 ? xdiff : 0),
       attributes.yPos + (start.keycode == 1 ? ydiff : 0)
     )
-    start.keycode == 3 && X.ResizeWindow(
+    return start.keycode == 3 && X.ResizeWindow(
       start.child,
       Math.max(1, attributes.width + (start.keycode == 3 ? xdiff : 0)),
       Math.max(1, attributes.height + (start.keycode == 3 ? ydiff : 0))
     )
-  } else if (event.name == 'ButtonRelease') {
-    start = null
+  case 'ButtonRelease':
+    return start = null
+  case 'MapRequest':
+    X.GetWindowAttributes(event.window, (error, attributes) => {
+      if (error) return console.error(error)
+      if (attributes[8]) {
+        return X.MapWindow(event.wid)
+      }
+    })
+    console.log(event.wid, 'wid')
+    X.ChangeWindowAttributes(
+      event.wid,
+      {eventMask: x11.eventMask.EnterWindow}
+    )
+    workspaces[current_workspace].addWindow(event.wid)
+    console.log(event.wid, 'wid')
+    return
+  case 'EnterWindow':
+    const window = new Window(event.wid)
+    window.focus()
+    if (!workspaces[current_workspace].contains(event.wid)) {
+      workspaces[current_workspace].addWindow(event.wid)
+    }
+    exec(`notify-send ${util.inspect(event)}`)
   }
-}).on('error', error => {
-  console.error(error)
-  debugger
-})
 
+  X.ChangeWindowAttributes(root, {
+    eventMask: x11.eventMask.SubstructureNotify
+    | x11.eventMask.SubstructureRedirect
+    | x11.eventMask.ResizeRedirect
+    | x11.eventMask.Exposure
+    | x11.eventMask.MapRequest
+    | x11.eventMask.EnterWindow
+  }, console.error)
+}).on('error', console.error)
+
+// commands
 eventEmitter.on('cmd', cmd => {
   fs.writeFile('/tmp/XXX', util.inspect(X), ()=>{})
   fs.writeFile('/tmp/child', util.inspect(child), Function.prototype)
   fs.writeFile('/tmp/path', util.inspect(process.argv), Function.prototype)
   let match = cmd.match(/workspace (\d)/)
+
   if (match) {
     workspaces.forEach(workspace => workspace.hide())
-    workspaces[match[1]].show()
+    current_workspace = match[1] - 1
+    workspaces[current_workspace].show()
+    fs.writeFile('/tmp/workspace', util.inspect(current_workspace), Function.prototype)
+  }
+
+  match = cmd.match(/^reload$/)
+  if (match) {
+
   }
 })
 

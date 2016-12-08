@@ -1,8 +1,7 @@
 const Window = require('./window')
 
 module.exports = class {
-  constructor(X, screen) {
-    this.X = X
+  constructor(screen) {
     this.screen = screen
     this.root = screen.root
     this.focused = null
@@ -10,21 +9,29 @@ module.exports = class {
   }
 
   addWindow(id) {
-    const window = new Window(this.X, id)
+    const window = new Window(id)
     this.windows.push(window)
     window.show()
+  }
+
+  removeWindow(id) {
+    this.windows = this.windows.filter(window => window.id != id)
   }
 
   show() {
     if (this.focused) {
       this.focused.focus()
     } else {
-      //this.X.SetInputFocus(this.root)
+      global.X.SetInputFocus(this.root)
     }
     this.windows.forEach(window => window.show())
   }
 
   hide() {
     this.windows.forEach(window => window.hide())
+  }
+
+  contains(id) {
+    return this.windows.some(window => window.id == id)
   }
 }

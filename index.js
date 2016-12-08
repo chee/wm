@@ -40,11 +40,12 @@ let child
 let X
 let workspaces
 let current_workspace = 0
+let current_window = null
 let root
 let ewmh
 
 x11.createClient((error, display) => {
-  X = display.client
+  X = global.X = display.client
   const screen = display.screen[0]
   root = screen.root
   ewmh = new EWMH(X, root)
@@ -52,11 +53,11 @@ x11.createClient((error, display) => {
   ewmh.on('CurrentDesktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
 
   workspaces = [
-    new Workspace(X, screen),
-    new Workspace(X, screen),
-    new Workspace(X, screen),
-    new Workspace(X, screen),
-    new Workspace(X, screen)
+    new Workspace(screen),
+    new Workspace(screen),
+    new Workspace(screen),
+    new Workspace(screen),
+    new Workspace(screen)
   ]
 
   ewmh.set_number_of_desktops(5, error => {
@@ -91,8 +92,14 @@ x11.createClient((error, display) => {
       }
     })
   case 'ButtonPress':
-    X.RaiseWindow(event.child)
-    return X.GetGeometry(event.child, (error, attr) => {
+    child = event.child
+    X.RaiseWindow(child)
+    current_window = new Window(child)
+    current_window.focus()
+    if (!workspaces[current_workspace].contains(child)) {
+      workspaces[current_workspace].addWindow(child)
+    }
+    return X.GetGeometry(child, (error, attr) => {
       start = event
       attributes = attr
     })

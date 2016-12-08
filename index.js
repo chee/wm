@@ -186,7 +186,7 @@ eventEmitter.on('cmd', cmd => {
 
   match = cmd.match(/^reload$/)
   if (match) {
-
+    X.SetInputFocus(root)
   }
 })
 

@@ -165,21 +165,21 @@ eventEmitter.on('cmd', cmd => {
       workspaces[current_workspace].show()
       ewmh.set_current_desktop(match[2] - 1)
       break
-    case 'move':
-      workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
-      workspaces[match[2] - 1].addWindow(current_window.id)
-      current_window.hide()
-      workspaces[current_workspace].show()
-      break
     }
   }
 
-  match = cmd.match(/^window\s+(\w+)\s+(\d+)/)
+  match = cmd.match(/^window\s+(\w+)\s+([a-z0-9]+)/)
 
   if (match) {
     switch (match[1]) {
       case 'destroy':
         current_window.kill()
+        break
+      case 'move':
+        workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
+        workspaces[match[2] - 1].addWindow(current_window.id)
+        current_window.hide()
+        workspaces[current_workspace].show()
         break
     }
   }

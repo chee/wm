@@ -3,6 +3,7 @@ const exec = require('child_process').exec
 const events = require('events')
 const fs = require('fs')
 const x11 = require('x11')
+const EWMH = require('ewmh')
 
 const keys = require('./lib/xkeys')
 const {stringToKeys, or} = require('./util')
@@ -40,11 +41,15 @@ let X
 let workspaces
 let current_workspace = 0
 let root
+let ewmh
 
 x11.createClient((error, display) => {
   X = display.client
   const screen = display.screen[0]
   root = screen.root
+  ewmh = new EWMH(X, root)
+
+  ewmh.on('CurrentDesktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
 
   workspaces = [
     new Workspace(X, screen),
@@ -53,6 +58,11 @@ x11.createClient((error, display) => {
     new Workspace(X, screen),
     new Workspace(X, screen)
   ]
+
+  ewmh.set_number_of_desktops(5, error => {
+    if (error) exec(`notify-send "${error}"`)
+    ewmh.set_current_desktop(0)
+  })
 
   keybindings.forEach(binding => {
     X.GrabKey(root, true,

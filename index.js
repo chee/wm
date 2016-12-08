@@ -12,9 +12,6 @@ const Window = require('./window')
 
 const eventEmitter = new events.EventEmitter
 
-const GRAB_MODE_ASYNC = 1
-const NOTHING = 0
-
 const name = 'wm'
 const configuration = require('rc')(name)
 
@@ -41,6 +38,8 @@ let root
 let ewmh
 
 x11.createClient((error, display) => {
+  const ASYNC = 1
+  const NOPE = 0
   X = global.X = display.client
   const screen = display.screen[0]
   root = screen.root
@@ -65,27 +64,32 @@ x11.createClient((error, display) => {
     X.GrabKey(root, true,
       binding.buttons,
       binding.keycode,
-      GRAB_MODE_ASYNC,
-      GRAB_MODE_ASYNC
+      ASYNC,
+      ASYNC
     )
   })
+  // X.GrabButton(
+  //   root, false, x11.eventMask.ButtonPress,
+  //   ASYNC, ASYNC, NOPE, NOPE, 1, NOPE
+  // )
   X.GrabButton(
     root, true, x11.eventMask.ButtonPress | x11.eventMask.ButtonRelease | x11.eventMask.PointerMotion,
-    GRAB_MODE_ASYNC, GRAB_MODE_ASYNC, NOTHING, NOTHING, 1, keys.buttons.M
+    ASYNC, ASYNC, NOPE, NOPE, 1, keys.buttons.M
   )
   X.GrabButton(
     root, true, x11.eventMask.ButtonPress | x11.eventMask.ButtonRelease | x11.eventMask.PointerMotion,
-    GRAB_MODE_ASYNC, GRAB_MODE_ASYNC, NOTHING, NOTHING, 3, keys.buttons.M
+    ASYNC, ASYNC, NOPE, NOPE, 3, keys.buttons.M
   )
 }).on('event', event => {
   child = event.child
   switch(event.name) {
   case 'KeyPress':
-    return keybindings.forEach(binding => {
+    keybindings.forEach(binding => {
       if (event.buttons == binding.buttons && event.keycode == binding.keycode) {
         exec(binding.cmd, console.log)
       }
     })
+    break
   case 'ButtonPress':
     child = event.child
     X.RaiseWindow(child)
@@ -94,26 +98,29 @@ x11.createClient((error, display) => {
     if (!workspaces[current_workspace].contains(child)) {
       workspaces[current_workspace].addWindow(child)
     }
-    return X.GetGeometry(child, (error, attr) => {
+    X.GetGeometry(child, (error, attr) => {
       start = event
       attributes = attr
     })
+    break
   case 'MotionNotify':
     if (!start) return
     const xdiff = event.rootx - start.rootx
     const ydiff = event.rooty - start.rooty
-    start.keycode == 1 && X.MoveWindow(
+    start.keycode == 1 && start.buttons == keys.buttons.M && X.MoveWindow(
       start.child,
       attributes.xPos + (start.keycode == 1 ? xdiff : 0),
       attributes.yPos + (start.keycode == 1 ? ydiff : 0)
     )
-    return start.keycode == 3 && X.ResizeWindow(
+    start.keycode == 3 && X.ResizeWindow(
       start.child,
       Math.max(1, attributes.width + (start.keycode == 3 ? xdiff : 0)),
       Math.max(1, attributes.height + (start.keycode == 3 ? ydiff : 0))
     )
+    break
   case 'ButtonRelease':
-    return start = null
+    start = null
+    break
   case 'MapRequest':
     X.GetWindowAttributes(event.window, (error, attributes) => {
       if (error) return console.error(error)
@@ -121,25 +128,26 @@ x11.createClient((error, display) => {
         return X.MapWindow(event.wid)
       }
     })
-    console.log(event.wid, 'wid')
     X.ChangeWindowAttributes(
       event.wid,
       {eventMask: x11.eventMask.EnterWindow}
     )
     workspaces[current_workspace].addWindow(event.wid)
-    console.log(event.wid, 'wid')
-    return
-  case 'EnterWindow':
+    break
+  case 'FocusIn':
+  case 'EnterNotify':
     child = event.wid
     current_window = new Window(event.wid)
     current_window.focus()
     if (!workspaces[current_workspace].contains(child)) {
       workspaces[current_workspace].addWindow(child)
     }
-    exec(`notify-send ${util.inspect(event)}`)
+    console.log(event)
+    break
   case 'ConfigureRequest':
     child = event.wid
     X.ResizeWindow(event.wid, event.width, event.height)
+    break
   }
 
   X.ChangeWindowAttributes(root, {
@@ -149,6 +157,7 @@ x11.createClient((error, display) => {
     | x11.eventMask.Exposure
     | x11.eventMask.MapRequest
     | x11.eventMask.EnterWindow
+    | x11.eventMask.FocusChange
   }, console.error)
 }).on('error', console.error)
 

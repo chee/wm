@@ -138,16 +138,36 @@ x11.createClient((error, display) => {
 
 // commands
 eventEmitter.on('cmd', cmd => {
-  fs.writeFile('/tmp/XXX', util.inspect(X), ()=>{})
-  fs.writeFile('/tmp/child', util.inspect(child), Function.prototype)
-  fs.writeFile('/tmp/path', util.inspect(process.argv), Function.prototype)
-  let match = cmd.match(/workspace (\d)/)
+  let match = cmd.match(/workspace\s+(\w+)\s+(\d+)/)
 
   if (match) {
-    workspaces.forEach(workspace => workspace.hide())
-    current_workspace = match[1] - 1
-    workspaces[current_workspace].show()
-    fs.writeFile('/tmp/workspace', util.inspect(current_workspace), Function.prototype)
+    switch (match[1]) {
+    case 'switch':
+      // todo: make this start showing the new windows before hiding the old ones
+      workspaces.forEach(workspace => workspace.hide())
+      current_workspace = match[2] - 1
+      workspaces[current_workspace].show()
+      ewmh.set_current_desktop(match[2] - 1)
+      break
+    case 'move':
+      workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
+      workspaces[match[2] - 1].addWindow(current_window.id)
+      current_window.hide()
+      workspaces[current_workspace].show()
+      break
+    }
+
+
+  }
+
+  match = cmd.match(/^window\s+(\w+)\s+(\d+)/)
+
+  if (match) {
+    switch (match[1]) {
+      case 'destroy':
+        current_window.kill()
+        break
+    }
   }
 
   match = cmd.match(/^reload$/)

@@ -1,3 +1,2 @@
 #!/bin/sh
 echo "workspace $*" | nc -U /tmp/wm
-echo $* > /tmp/workspace

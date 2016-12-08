@@ -30,10 +30,6 @@ const keybindings = (() => {
 
 process.env.PATH = `${process.argv[1]}/bin:${process.env.PATH}`
 
-console.error = error => {
-  fs.writeFile('/tmp/error', util.inspect(error), console.log)
-}
-
 let start
 let attributes
 let child
@@ -82,7 +78,6 @@ x11.createClient((error, display) => {
     GRAB_MODE_ASYNC, GRAB_MODE_ASYNC, NOTHING, NOTHING, 3, keys.buttons.M
   )
 }).on('event', event => {
-  fs.writeFile('/tmp/event', util.inspect(event), console.error)
   child = event.child
   switch(event.name) {
   case 'KeyPress':
@@ -177,8 +172,6 @@ eventEmitter.on('cmd', cmd => {
       workspaces[current_workspace].show()
       break
     }
-
-
   }
 
   match = cmd.match(/^window\s+(\w+)\s+(\d+)/)

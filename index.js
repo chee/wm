@@ -135,12 +135,16 @@ x11.createClient((error, display) => {
     console.log(event.wid, 'wid')
     return
   case 'EnterWindow':
-    const window = new Window(event.wid)
-    window.focus()
-    if (!workspaces[current_workspace].contains(event.wid)) {
-      workspaces[current_workspace].addWindow(event.wid)
+    child = event.wid
+    current_window = new Window(event.wid)
+    current_window.focus()
+    if (!workspaces[current_workspace].contains(child)) {
+      workspaces[current_workspace].addWindow(child)
     }
     exec(`notify-send ${util.inspect(event)}`)
+  case 'ConfigureRequest':
+    child = event.wid
+    X.ResizeWindow(event.wid, event.width, event.height)
   }
 
   X.ChangeWindowAttributes(root, {

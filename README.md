@@ -1,13 +1,13 @@
 # wm
 window manager written in javascript
 
-sure, you sometimes have to Mod4+click a window to get it to focus
+sure, ~~you sometimes have to Mod4+click a window to get it to focus~~
 
-and it doesn't do tiling
+~~and~~ it doesn't do tiling
 
 and the code is all over the place and mad
 
-and sometimes you have to switch to a tty to tell it to refocus the root window
+and ~~sometimes you have to switch to a tty to tell it to refocus the root window~~
 
 but every keybinding is bound to just a program, just any executable file in `PATH` be it firefox or its own internal programs
 

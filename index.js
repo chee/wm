@@ -37,35 +37,13 @@ let attributes
 let child
 let X
 let workspaces
-let current_workspace = 0
+let current_workspace
 let current_window = null
 let root
 let ewmh
 
-x11.createClient((error, display) => {
-  const ASYNC = 1
-  const NOPE = 0
-  X = global.X = display.client
-  const screen = display.screen[0]
-  root = screen.root
-  ewmh = new EWMH(X, root)
-
-  ewmh.on('CurrentDesktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
-
-  workspaces = [
-    new Workspace(screen),
-    new Workspace(screen),
-    new Workspace(screen),
-    new Workspace(screen),
-    new Workspace(screen)
-  ]
-
-  ewmh.set_number_of_desktops(5, error => {
-    if (error) exec(`notify-send "${error}"`)
-    ewmh.set_current_desktop(0)
-  })
-
-  keybindings.forEach(binding => {
+function grabKeys(X, bindings) {
+  bindings.forEach(binding => {
     X.GrabKey(root, true,
       binding.buttons,
       binding.keycode,
@@ -73,10 +51,10 @@ x11.createClient((error, display) => {
       ASYNC
     )
   })
-  // X.GrabButton(
-  //   root, false, x11.eventMask.ButtonPress,
-  //   ASYNC, ASYNC, NOPE, NOPE, 1, NOPE
-  // )
+}
+
+// todo: make this key configurable
+function grabButtons(X) {
   X.GrabButton(
     root, true, x11.eventMask.ButtonPress | x11.eventMask.ButtonRelease | x11.eventMask.PointerMotion,
     ASYNC, ASYNC, NOPE, NOPE, 1, keys.buttons.M
@@ -85,6 +63,31 @@ x11.createClient((error, display) => {
     root, true, x11.eventMask.ButtonPress | x11.eventMask.ButtonRelease | x11.eventMask.PointerMotion,
     ASYNC, ASYNC, NOPE, NOPE, 3, keys.buttons.M
   )
+}
+
+// todo: make this size configurable
+function makeWorkspaces(screen, size) {
+  return Array.from(Array(size), () => new Workspace(screen))
+}
+
+x11.createClient((error, display) => {
+  X = global.X = display.client
+  const screen = display.screen[0]
+  root = screen.root
+  ewmh = new EWMH(X, root)
+
+  ewmh.on('CurrentDesktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
+
+  grabKeys(X, keybindings)
+  grabButtons(X)
+
+  workspaces = makeWorkspaces(screen, 5)
+  current_workspace = workspaces[0]
+
+  ewmh.set_number_of_desktops(5, error => {
+    if (error) exec(`notify-send "${error}"`)
+    ewmh.set_current_desktop(0)
+  })
 }).on('event', event => {
   child = event.child
   switch(event.name) {
@@ -100,8 +103,8 @@ x11.createClient((error, display) => {
     X.RaiseWindow(child)
     current_window = new Window(child)
     current_window.focus()
-    if (!workspaces[current_workspace].contains(child)) {
-      workspaces[current_workspace].addWindow(child)
+    if (!current_workspace.contains(child)) {
+      current_workspace.addWindow(child)
     }
     X.GetGeometry(child, (error, attr) => {
       start = event
@@ -137,17 +140,17 @@ x11.createClient((error, display) => {
       event.wid,
       {eventMask: x11.eventMask.EnterWindow}
     )
-    workspaces[current_workspace].addWindow(event.wid)
+    current_workspace.addWindow(event.wid)
     break
   case 'FocusIn':
   case 'EnterNotify':
     child = event.wid
-    current_window = new Window(event.wid)
+    current_window = new Window(child)
     current_window.focus()
-    if (!workspaces[current_workspace].contains(child)) {
-      workspaces[current_workspace].addWindow(child)
+    if (!current_workspace.contains(child)) {
+      workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
+      current_workspace.addWindow(child)
     }
-    console.log(event)
     break
   case 'ConfigureRequest':
     child = event.wid
@@ -175,8 +178,8 @@ eventEmitter.on('cmd', cmd => {
     case 'switch':
       // todo: make this start showing the new windows before hiding the old ones
       workspaces.forEach(workspace => workspace.hide())
-      current_workspace = match[2] - 1
-      workspaces[current_workspace].show()
+      current_workspace = workspaces[match[2] - 1]
+      current_workspace.show()
       ewmh.set_current_desktop(match[2] - 1)
       break
     }
@@ -193,7 +196,7 @@ eventEmitter.on('cmd', cmd => {
         workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
         workspaces[match[2] - 1].addWindow(current_window.id)
         current_window.hide()
-        workspaces[current_workspace].show()
+        current_workspace.show()
         break
     }
   }

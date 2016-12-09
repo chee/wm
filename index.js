@@ -1,4 +1,6 @@
 const util = require('util')
+
+const path = require('path')
 const exec = require('child_process').exec
 const events = require('events')
 const fs = require('fs')
@@ -25,7 +27,10 @@ const keybindings = (() => {
   return keybindings
 })()
 
-process.env.PATH = `${process.argv[1]}/bin:${process.env.PATH}`
+const ASYNC = 1
+const NOPE = 0
+
+process.env.PATH = `${path.dirname(process.argv[1])}/bin:${process.env.PATH}`
 
 let start
 let attributes

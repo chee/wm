@@ -3,7 +3,6 @@ const util = require('util')
 const path = require('path')
 const exec = require('child_process').exec
 const events = require('events')
-const fs = require('fs')
 const x11 = require('x11')
 const EWMH = require('ewmh')
 
@@ -32,7 +31,6 @@ const NOPE = 0
 
 process.env.PATH = `${path.dirname(process.argv[1])}/bin:${process.env.PATH}`
 
-let start
 let attributes
 let child
 let X
@@ -70,104 +68,108 @@ function makeWorkspaces(screen, size) {
   return Array.from(Array(size), () => new Workspace(screen))
 }
 
-x11.createClient((error, display) => {
-  X = global.X = display.client
-  const screen = display.screen[0]
-  root = screen.root
-  ewmh = new EWMH(X, root)
+function createClient() {
+  x11.createClient((error, display) => {
+    const screen = display.screen[0]
+    root = screen.root
+    X = global.X = display.client
+    ewmh = new EWMH(X, root)
 
-  ewmh.on('CurrentDesktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
+    let start
 
-  grabKeys(X, keybindings)
-  grabButtons(X)
+    ewmh.on('CurrentDesktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
 
-  workspaces = makeWorkspaces(screen, 5)
-  current_workspace = workspaces[0]
+    grabKeys(X, keybindings)
+    grabButtons(X)
 
-  ewmh.set_number_of_desktops(5, error => {
-    if (error) exec(`notify-send "${error}"`)
-    ewmh.set_current_desktop(0)
-  })
-}).on('event', event => {
-  child = event.child
-  switch(event.name) {
-  case 'KeyPress':
-    keybindings.forEach(binding => {
-      if (event.buttons == binding.buttons && event.keycode == binding.keycode) {
-        exec(binding.cmd, console.log)
-      }
+    workspaces = makeWorkspaces(screen, 5)
+    current_workspace = workspaces[0]
+
+    ewmh.set_number_of_desktops(5, error => {
+      if (error) exec(`notify-send "${error}"`)
+      ewmh.set_current_desktop(0)
     })
-    break
-  case 'ButtonPress':
+  }).on('event', event => {
     child = event.child
-    X.RaiseWindow(child)
-    current_window = new Window(child)
-    current_window.focus()
-    if (!current_workspace.contains(child)) {
-      current_workspace.addWindow(child)
-    }
-    X.GetGeometry(child, (error, attr) => {
-      start = event
-      attributes = attr
-    })
-    break
-  case 'MotionNotify':
-    if (!start) return
-    const xdiff = event.rootx - start.rootx
-    const ydiff = event.rooty - start.rooty
-    start.keycode == 1 && start.buttons == keys.buttons.M && X.MoveWindow(
-      start.child,
-      attributes.xPos + (start.keycode == 1 ? xdiff : 0),
-      attributes.yPos + (start.keycode == 1 ? ydiff : 0)
-    )
-    start.keycode == 3 && X.ResizeWindow(
-      start.child,
-      Math.max(1, attributes.width + (start.keycode == 3 ? xdiff : 0)),
-      Math.max(1, attributes.height + (start.keycode == 3 ? ydiff : 0))
-    )
-    break
-  case 'ButtonRelease':
-    start = null
-    break
-  case 'MapRequest':
-    X.GetWindowAttributes(event.window, (error, attributes) => {
-      if (error) return console.error(error)
-      if (attributes[8]) {
-        return X.MapWindow(event.wid)
+    switch(event.name) {
+    case 'KeyPress':
+      keybindings.forEach(binding => {
+        if (event.buttons == binding.buttons && event.keycode == binding.keycode) {
+          exec(binding.cmd, console.log)
+        }
+      })
+      break
+    case 'ButtonPress':
+      child = event.child
+      X.RaiseWindow(child)
+      current_window = new Window(child)
+      current_window.focus()
+      if (!current_workspace.contains(child)) {
+        current_workspace.addWindow(child)
       }
-    })
-    X.ChangeWindowAttributes(
-      event.wid,
-      {eventMask: x11.eventMask.EnterWindow}
-    )
-    current_workspace.addWindow(event.wid)
-    break
-  case 'FocusIn':
-  case 'EnterNotify':
-    child = event.wid
-    current_window = new Window(child)
-    current_window.focus()
-    if (!current_workspace.contains(child)) {
-      workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
-      current_workspace.addWindow(child)
+      X.GetGeometry(child, (error, attr) => {
+        start = event
+        attributes = attr
+      })
+      break
+    case 'MotionNotify':
+      if (!start) return
+      const xdiff = event.rootx - start.rootx
+      const ydiff = event.rooty - start.rooty
+      start.keycode == 1 && start.buttons == keys.buttons.M && X.MoveWindow(
+        start.child,
+        attributes.xPos + (start.keycode == 1 ? xdiff : 0),
+        attributes.yPos + (start.keycode == 1 ? ydiff : 0)
+      )
+      start.keycode == 3 && X.ResizeWindow(
+        start.child,
+        Math.max(1, attributes.width + (start.keycode == 3 ? xdiff : 0)),
+        Math.max(1, attributes.height + (start.keycode == 3 ? ydiff : 0))
+      )
+      break
+    case 'ButtonRelease':
+      start = null
+      break
+    case 'MapRequest':
+      X.GetWindowAttributes(event.window, (error, attributes) => {
+        if (error) return console.error(error)
+        if (attributes[8]) {
+          return X.MapWindow(event.wid)
+        }
+      })
+      X.ChangeWindowAttributes(
+        event.wid,
+        {eventMask: x11.eventMask.EnterWindow}
+      )
+      current_workspace.addWindow(event.wid)
+      break
+    case 'FocusIn':
+    case 'EnterNotify':
+      child = event.wid
+      current_window = new Window(child)
+      current_window.focus()
+      if (!current_workspace.contains(child)) {
+        workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
+        current_workspace.addWindow(child)
+      }
+      break
+    case 'ConfigureRequest':
+      child = event.wid
+      X.ResizeWindow(event.wid, event.width, event.height)
+      break
     }
-    break
-  case 'ConfigureRequest':
-    child = event.wid
-    X.ResizeWindow(event.wid, event.width, event.height)
-    break
-  }
 
-  X.ChangeWindowAttributes(root, {
-    eventMask: x11.eventMask.SubstructureNotify
-    | x11.eventMask.SubstructureRedirect
-    | x11.eventMask.ResizeRedirect
-    | x11.eventMask.Exposure
-    | x11.eventMask.MapRequest
-    | x11.eventMask.EnterWindow
-    | x11.eventMask.FocusChange
-  }, console.error)
-}).on('error', console.error)
+    X.ChangeWindowAttributes(root, {
+      eventMask: x11.eventMask.SubstructureNotify
+      | x11.eventMask.SubstructureRedirect
+      | x11.eventMask.ResizeRedirect
+      | x11.eventMask.Exposure
+      | x11.eventMask.MapRequest
+      | x11.eventMask.EnterWindow
+      | x11.eventMask.FocusChange
+    }, console.error)
+  }).on('error', console.error)
+}
 
 // commands
 eventEmitter.on('cmd', cmd => {
@@ -203,8 +205,22 @@ eventEmitter.on('cmd', cmd => {
 
   match = cmd.match(/^reload$/)
   if (match) {
-    X.SetInputFocus(root)
+    workspaces.forEach(workspace => workspace.hide())
+    current_workspace = workspaces[0]
+    current_workspace.show()
+    ewmh.set_current_desktop(0)
+    workspaces.forEach(workspace => {
+      workspace.mapWindow(window => {
+        workspace.removeWindow(window.id)
+        current_workspace.addWindow(window.id)
+      })
+    })
+    X.KillClient()
+    createClient()
+    eventEmitter.emit('die')
+    require('./srv')(eventEmitter)
   }
 })
 
 require('./srv')(eventEmitter)
+createClient()

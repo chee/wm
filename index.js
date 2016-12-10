@@ -35,8 +35,8 @@ let attributes
 let child
 let X
 let workspaces
-let current_workspace
-let current_window = null
+let currentWorkspace
+let currentWindow = null
 let screen
 let root
 let ewmh
@@ -82,7 +82,7 @@ function createClient() {
     grabButtons(X)
 
     workspaces = makeWorkspaces(screen, 5)
-    current_workspace = workspaces[0]
+    currentWorkspace = workspaces[0]
 
     ewmh.set_number_of_desktops(5, error => {
       if (error) exec(`notify-send "${error}"`)
@@ -101,10 +101,10 @@ function createClient() {
     case 'ButtonPress':
       child = event.child
       X.RaiseWindow(child)
-      current_window = new Window(child)
-      current_window.focus()
-      if (!current_workspace.contains(child)) {
-        current_workspace.addWindow(child)
+      currentWindow = new Window(child)
+      currentWindow.focus()
+      if (!currentWorkspace.contains(child)) {
+        currentWorkspace.addWindow(child)
       }
       X.GetGeometry(child, (error, attr) => {
         start = event
@@ -140,16 +140,16 @@ function createClient() {
         event.wid,
         {eventMask: x11.eventMask.EnterWindow}
       )
-      current_workspace.addWindow(event.wid)
+      currentWorkspace.addWindow(event.wid)
       break
     case 'FocusIn':
     case 'EnterNotify':
       child = event.wid
-      current_window = new Window(child)
-      current_window.focus()
-      if (!current_workspace.contains(child)) {
-        workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
-        current_workspace.addWindow(child)
+      currentWindow = new Window(child)
+      currentWindow.focus()
+      if (!currentWorkspace.contains(child)) {
+        workspaces.forEach(workspace => workspace.removeWindow(currentWindow.id))
+        currentWorkspace.addWindow(child)
       }
       break
     case 'ConfigureRequest':
@@ -179,8 +179,8 @@ eventEmitter.on('cmd', cmd => {
     case 'switch':
       // todo: make this start showing the new windows before hiding the old ones
       workspaces.forEach(workspace => workspace.hide())
-      current_workspace = workspaces[match[2] - 1]
-      current_workspace.show()
+      currentWorkspace = workspaces[match[2] - 1]
+      currentWorkspace.show()
       ewmh.set_current_desktop(match[2] - 1)
       break
     }
@@ -191,40 +191,40 @@ eventEmitter.on('cmd', cmd => {
   if (match) {
     switch (match[1]) {
       case 'destroy':
-        current_window.kill()
+        currentWindow.kill()
         break
       case 'move':
-        workspaces.forEach(workspace => workspace.removeWindow(current_window.id))
-        workspaces[match[2] - 1].addWindow(current_window.id)
-        current_window.hide()
-        current_workspace.show()
+        workspaces.forEach(workspace => workspace.removeWindow(currentWindow.id))
+        workspaces[match[2] - 1].addWindow(currentWindow.id)
+        currentWindow.hide()
+        currentWorkspace.show()
         break
       case 'tile':
         switch (match[2]) {
         case 'left':
-          X.ResizeWindow(current_window.id, screen.pixel_width / 2, screen.pixel_height)
-          X.MoveWindow(current_window.id, 0, 0)
+          X.ResizeWindow(currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+          X.MoveWindow(currentWindow.id, 0, 0)
           break
         case 'right':
-          X.ResizeWindow(current_window.id, screen.pixel_width / 2, screen.pixel_height)
-          X.MoveWindow(current_window.id, screen.pixel_width / 2, 0)
+          X.ResizeWindow(currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+          X.MoveWindow(currentWindow.id, screen.pixel_width / 2, 0)
           break
         case 'full':
-          X.ResizeWindow(current_window.id, screen.pixel_width, screen.pixel_height)
-          X.MoveWindow(current_window.id, 0, 0)
+          X.ResizeWindow(currentWindow.id, screen.pixel_width, screen.pixel_height)
+          X.MoveWindow(currentWindow.id, 0, 0)
         }
     }
   }
   match = cmd.match(/^reload$/)
   if (match) {
     workspaces.forEach(workspace => workspace.hide())
-    current_workspace = workspaces[0]
-    current_workspace.show()
+    currentWorkspace = workspaces[0]
+    currentWorkspace.show()
     ewmh.set_current_desktop(0)
     workspaces.forEach(workspace => {
       workspace.mapWindow(window => {
         workspace.removeWindow(window.id)
-        current_workspace.addWindow(window.id)
+        currentWorkspace.addWindow(window.id)
       })
     })
     X.KillClient()

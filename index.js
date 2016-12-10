@@ -198,6 +198,7 @@ commandQueue.on('cmd', cmd => {
       break
     case 'move':
       // todo: remove only from current workspace?
+      if (!workspace.currentWindow) break
       workspaces.forEach(workspace => Workspace.removeWindow(workspace, workspace.currentWindow))
       Workspace.addWindow(workspaces[match[2] - 1], workspace.currentWindow)
       Window.hide(workspace.currentWindow)

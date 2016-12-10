@@ -1,7 +1,7 @@
 const fs = require('fs')
 const net = require('net')
 
-var path = '/tmp/wm'
+var path = process.env.XEPHYR ? '/tmp/wm.xephyr' : '/tmp/wm'
 
 module.exports = eventEmitter => {
   fs.unlink(path, () => {

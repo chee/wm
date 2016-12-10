@@ -1,27 +1,25 @@
-module.exports = class {
-  constructor(id, parent, screen) {
-    this.id = id
-    this.parent = parent
-    this.screen = screen
-  }
+const create = id => ({
+  id,
+  workspace: null,
+  shown: false,
+  focused: false
+})
 
-  show() {
-    global.X.MapWindow(this.id)
-  }
-
-  hide() {
-    global.X.UnmapWindow(this.id)
-  }
-
-  focus() {
-    global.X.SetInputFocus(this.id)
-  }
-
-  kill() {
-    global.X.DestroyWindow(this.id)
-  }
-
-  exec(callback) {
-    callback(this)
-  }
+const show = window => {
+  global.X.MapWindow(window.id)
+  window.shown = true
 }
+
+const hide = window => {
+  global.X.UnmapWindow(window.id)
+  window.shown = false
+}
+
+const focus = window => {
+  global.X.SetInputFocus(window.id)
+  // todo: how does this get unset
+  // is it even the job of the window to maintain this?
+  window.focused = true
+}
+
+export {create, show, hide, focus}

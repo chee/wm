@@ -1,21 +1,21 @@
-const util = require('util')
+import {dirname} from 'path'
+import {exec} from 'child_process'
+import events from 'events'
+import x11 from 'x11'
+import EWMH from 'ewmh'
 
-const path = require('path')
-const exec = require('child_process').exec
-const events = require('events')
-const x11 = require('x11')
-const EWMH = require('ewmh')
+import {stringToKeys} from './util'
+import keys from './lib/keys'
+import * as Workspace from './workspace'
+import * as Window from './window'
+import listen from './srv'
 
-const keys = require('./lib/keys')
-const {stringToKeys, or} = require('./util')
-const Workspace = require('./workspace')
-const Window = require('./window')
-
-const eventEmitter = new events.EventEmitter
+const commandQueue = new events.EventEmitter
 
 const name = 'wm'
 const configuration = require('rc')(name)
 
+// todo:
 const keybindings = (() => {
   const keybindings = []
   for (const binding in configuration.keybindings) {
@@ -29,14 +29,14 @@ const keybindings = (() => {
 const ASYNC = 1
 const NOPE = 0
 
-process.env.PATH = `${path.dirname(process.argv[1])}/bin:${process.env.PATH}`
+process.env.PATH = `${dirname(process.argv[1])}/bin:${process.env.PATH}`
 
 let attributes
 let child
+let start
 let X
 let workspaces
-let currentWorkspace
-let currentWindow = null
+let workspace = null
 let screen
 let root
 let ewmh
@@ -65,8 +65,12 @@ function grabButtons(X) {
 }
 
 // todo: make this size configurable
-function makeWorkspaces(screen, size) {
-  return Array.from(Array(size), () => new Workspace(screen))
+function makeWorkspaces(size) {
+  const workspaces = []
+  for (let id = 0; id < size; id++) {
+    workspaces.push(Workspace.create(id))
+  }
+  return workspaces
 }
 
 function createClient() {
@@ -76,20 +80,22 @@ function createClient() {
     X = global.X = display.client
     ewmh = new EWMH(X, root)
 
-    ewmh.on('CurrentDesktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
+    ewmh.on('Desktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
 
     grabKeys(X, keybindings)
     grabButtons(X)
 
-    workspaces = makeWorkspaces(screen, 5)
-    currentWorkspace = workspaces[0]
+    workspaces = makeWorkspaces(5)
+    workspace = workspaces[0]
 
     ewmh.set_number_of_desktops(5, error => {
       if (error) exec(`notify-send "${error}"`)
       ewmh.set_current_desktop(0)
     })
   }).on('event', event => {
-    child = event.child
+    // todo: put all these event handlers in functions
+    // todo: it will fix the duplicate decls and be neater
+    // todo: perhaps emit each of these events from another emitter
     switch(event.name) {
     case 'KeyPress':
       keybindings.forEach(binding => {
@@ -101,10 +107,10 @@ function createClient() {
     case 'ButtonPress':
       child = event.child
       X.RaiseWindow(child)
-      currentWindow = new Window(child)
-      currentWindow.focus()
-      if (!currentWorkspace.contains(child)) {
-        currentWorkspace.addWindow(child)
+      workspace.currentWindow = Window.create(child)
+      Window.focus(workspace.currentWindow)
+      if (!Workspace.contains(workspace, workspace.currentWindow)) {
+        Workspace.addWindow(workspace, workspace.currentWindow)
       }
       X.GetGeometry(child, (error, attr) => {
         start = event
@@ -130,7 +136,7 @@ function createClient() {
       start = null
       break
     case 'MapRequest':
-      X.GetWindowAttributes(event.window, (error, attributes) => {
+      X.GetWindowAttributes(event.wid, (error, attributes) => {
         if (error) return console.error(error)
         if (attributes[8]) {
           return X.MapWindow(event.wid)
@@ -140,17 +146,14 @@ function createClient() {
         event.wid,
         {eventMask: x11.eventMask.EnterWindow}
       )
-      currentWorkspace.addWindow(event.wid)
+      let window = Window.create(event.wid)
+      Workspace.addWindow(workspace, window)
       break
     case 'FocusIn':
     case 'EnterNotify':
       child = event.wid
-      currentWindow = new Window(child)
-      currentWindow.focus()
-      if (!currentWorkspace.contains(child)) {
-        workspaces.forEach(workspace => workspace.removeWindow(currentWindow.id))
-        currentWorkspace.addWindow(child)
-      }
+      workspace.currentWindow = Window.create(child)
+      Window.focus(workspace.currentWindow)
       break
     case 'ConfigureRequest':
       child = event.wid
@@ -171,16 +174,16 @@ function createClient() {
 }
 
 // commands
-eventEmitter.on('cmd', cmd => {
+commandQueue.on('cmd', cmd => {
   let match = cmd.match(/workspace\s+(\w+)\s+(\d+)/)
 
   if (match) {
     switch (match[1]) {
     case 'switch':
       // todo: make this start showing the new windows before hiding the old ones
-      workspaces.forEach(workspace => workspace.hide())
-      currentWorkspace = workspaces[match[2] - 1]
-      currentWorkspace.show()
+      workspaces.forEach(workspace => Workspace.hide(workspace))
+      workspace = workspaces[match[2] - 1]
+      Workspace.show(workspace, root)
       ewmh.set_current_desktop(match[2] - 1)
       break
     }
@@ -191,48 +194,49 @@ eventEmitter.on('cmd', cmd => {
   if (match) {
     switch (match[1]) {
       case 'destroy':
-        currentWindow.kill()
+        // workspace.currentWindow?
         break
       case 'move':
-        workspaces.forEach(workspace => workspace.removeWindow(currentWindow.id))
-        workspaces[match[2] - 1].addWindow(currentWindow.id)
-        currentWindow.hide()
-        currentWorkspace.show()
+        // todo: remove only from current workspace?
+        workspaces.forEach(workspace => Workspace.removeWindow(workspace, workspace.currentWindow))
+        Workspace.addWindow(workspaces[match[2] - 1], currentWindow)
+        Window.hide(currentWindow)
+        workspace.currentWindow = null
+        Workspace.show(workspace)
         break
       case 'tile':
         switch (match[2]) {
         case 'left':
-          X.ResizeWindow(currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-          X.MoveWindow(currentWindow.id, 0, 0)
+          X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+          X.MoveWindow(workspace.currentWindow.id, 0, 0)
           break
         case 'right':
-          X.ResizeWindow(currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-          X.MoveWindow(currentWindow.id, screen.pixel_width / 2, 0)
+          X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+          X.MoveWindow(workspace.currentWindow.id, screen.pixel_width / 2, 0)
           break
         case 'full':
-          X.ResizeWindow(currentWindow.id, screen.pixel_width, screen.pixel_height)
-          X.MoveWindow(currentWindow.id, 0, 0)
+          X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
+          X.MoveWindow(workspace.currentWindow.id, 0, 0)
         }
     }
   }
+  // todo: make this just reload instead of killing the client
   match = cmd.match(/^reload$/)
   if (match) {
-    workspaces.forEach(workspace => workspace.hide())
-    currentWorkspace = workspaces[0]
-    currentWorkspace.show()
+    workspaces.forEach(workspace => Workspace.hide(workspace))
+    const home = workspace = workspaces[0]
+    Workspace.show(home)
     ewmh.set_current_desktop(0)
     workspaces.forEach(workspace => {
       workspace.windows.forEach(window => {
-        workspace.removeWindow(window.id)
-        currentWorkspace.addWindow(window.id)
+        Workspace.removeWindow(workspace, window)
+        Workspace.addWindow(home,window)
       })
     })
     X.KillClient()
     createClient()
-    eventEmitter.emit('die')
-    require('./srv')(eventEmitter)
   }
 })
 
-require('./srv')(eventEmitter)
+listen(commandQueue)
 createClient()

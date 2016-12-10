@@ -681,12 +681,6 @@ readline2@^1.0.1:
 		is-fullwidth-code-point "^1.0.0"
 		mute-stream "0.0.5"
 
-rec2:
-	version "1.2.0"
-	resolved "https://registry.yarnpkg.com/rec2/-/rec2-1.2.0.tgz#f4149482598b72f7302b0ae0c2f722616060bf00"
-	dependencies:
-		vec2 "~1.3"
-
 rechoir@^0.6.2:
 	version "0.6.2"
 	resolved "https://registry.yarnpkg.com/rechoir/-/rechoir-0.6.2.tgz#85204b54dba82d5742e28c96756ef43af50e3384"
@@ -826,14 +820,6 @@ user-home@^2.0.0:
 util-deprecate@~1.0.1:
 	version "1.0.2"
 	resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
-
-vec2:
-	version "1.6.0"
-	resolved "https://registry.yarnpkg.com/vec2/-/vec2-1.6.0.tgz#d2886b95fbbf638fa583aedf790ed0ee0df12185"
-
-vec2@~1.3:
-	version "1.3.4"
-	resolved "https://registry.yarnpkg.com/vec2/-/vec2-1.3.4.tgz#f716846649243dc7d9136842d7e42a694e5779a6"
 
 wordwrap@~1.0.0:
 	version "1.0.0"

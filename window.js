@@ -20,4 +20,4 @@ const focus = window => {
   global.X.SetInputFocus(window.id)
 }
 
-export {create, show, hide, focus}
+module.exports = {create, show, hide, focus}

@@ -1,21 +1,21 @@
-import {dirname} from 'path'
-import {exec} from 'child_process'
-import events from 'events'
-import x11 from 'x11'
-import EWMH from 'ewmh'
+const {dirname} = require('path')
+const {exec} = require('child_process')
+const events = require('events')
+const x11 = require('x11')
+const EWMH = require('ewmh')
 
-import {stringToKeys} from './util'
-import keys from './lib/keys'
-import * as Workspace from './workspace'
-import * as Window from './window'
-import listen from './srv'
+const {stringToKeys} = require('./util')
+const keys = require('./lib/keys')
+const Workspace = require('./workspace')
+const Window = require('./window')
+const listen = require('./srv')
 
 const commandQueue = new events.EventEmitter
 
 const name = 'wm'
 const configuration = require('rc')(name)
 
-// todo:
+// todo: fix this completely
 const keybindings = (() => {
   const keybindings = []
   for (const binding in configuration.keybindings) {

@@ -1,4 +1,4 @@
-import * as Window from './window'
+const Window = require('./window')
 
 const create = id => ({
   id,
@@ -41,4 +41,4 @@ const contains = (workspace, window) => {
   return workspace.windows.some(window => window.id == id)
 }
 
-export {create, addWindow, removeWindow, show, hide, contains}
+module.exports = {create, addWindow, removeWindow, show, hide, contains}

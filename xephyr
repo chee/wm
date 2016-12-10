@@ -2,4 +2,4 @@
 Xephyr :1 &
 DISPLAY=:1 konsole &
 DISPLAY=:1 konsole &
-DISPLAY=:1 node .
+DISPLAY=:1 npm run start

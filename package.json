@@ -6,12 +6,15 @@
 	"author": "chee <chee@snake.dog>",
 	"license": "GPL",
 	"dependencies": {
+		"babel-cli": "^6.18.0",
+		"babel-preset-latest": "^6.16.0",
+		"babel-preset-stage-0": "^6.16.0",
 		"ewmh": "^0.3.0",
 		"rc": "^1.1.6",
 		"x11": "^2.2.0"
 	},
 	"scripts": {
-		"start": "node index.js"
+		"start": "babel-node index.js"
 	},
 	"devDependencies": {
 		"eslint": "^3.12.0"

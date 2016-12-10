@@ -6,7 +6,7 @@ const events = require('events')
 const x11 = require('x11')
 const EWMH = require('ewmh')
 
-const keys = require('./lib/xkeys')
+const keys = require('./lib/keys')
 const {stringToKeys, or} = require('./util')
 const Workspace = require('./workspace')
 const Window = require('./window')

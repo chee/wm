@@ -1,5 +1,6 @@
+
 #!/bin/sh
 Xephyr :1 &
 DISPLAY=:1 konsole &
 DISPLAY=:1 konsole &
-DISPLAY=:1 npm run start
+XEPHYR=lolyep DISPLAY=:1 npm run start

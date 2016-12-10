@@ -193,31 +193,31 @@ commandQueue.on('cmd', cmd => {
 
   if (match) {
     switch (match[1]) {
-      case 'destroy':
-        // workspace.currentWindow?
+    case 'destroy':
+      // workspace.currentWindow?
+      break
+    case 'move':
+      // todo: remove only from current workspace?
+      workspaces.forEach(workspace => Workspace.removeWindow(workspace, workspace.currentWindow))
+      Workspace.addWindow(workspaces[match[2] - 1], workspace.currentWindow)
+      Window.hide(workspace.currentWindow)
+      workspace.currentWindow = null
+      Workspace.show(workspace)
+      break
+    case 'tile':
+      switch (match[2]) {
+      case 'left':
+        X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+        X.MoveWindow(workspace.currentWindow.id, 0, 0)
         break
-      case 'move':
-        // todo: remove only from current workspace?
-        workspaces.forEach(workspace => Workspace.removeWindow(workspace, workspace.currentWindow))
-        Workspace.addWindow(workspaces[match[2] - 1], currentWindow)
-        Window.hide(currentWindow)
-        workspace.currentWindow = null
-        Workspace.show(workspace)
+      case 'right':
+        X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+        X.MoveWindow(workspace.currentWindow.id, screen.pixel_width / 2, 0)
         break
-      case 'tile':
-        switch (match[2]) {
-        case 'left':
-          X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-          X.MoveWindow(workspace.currentWindow.id, 0, 0)
-          break
-        case 'right':
-          X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-          X.MoveWindow(workspace.currentWindow.id, screen.pixel_width / 2, 0)
-          break
-        case 'full':
-          X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
-          X.MoveWindow(workspace.currentWindow.id, 0, 0)
-        }
+      case 'full':
+        X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
+        X.MoveWindow(workspace.currentWindow.id, 0, 0)
+      }
     }
   }
   // todo: make this just reload instead of killing the client

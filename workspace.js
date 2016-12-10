@@ -34,8 +34,4 @@ module.exports = class {
   contains(id) {
     return this.windows.some(window => window.id == id)
   }
-
-  mapWindow(func) {
-    return this.windows.map(func)
-  }
 }

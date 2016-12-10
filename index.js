@@ -222,7 +222,7 @@ eventEmitter.on('cmd', cmd => {
     currentWorkspace.show()
     ewmh.set_current_desktop(0)
     workspaces.forEach(workspace => {
-      workspace.mapWindow(window => {
+      workspace.windows.forEach(window => {
         workspace.removeWindow(window.id)
         currentWorkspace.addWindow(window.id)
       })

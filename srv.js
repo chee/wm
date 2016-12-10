@@ -13,8 +13,5 @@ module.exports = eventEmitter => {
       console.log('server bound on %s', path)
     })
     eventEmitter.on('die', () => server.close())
-    process.on('SIGINT', () => server.close())
-    process.on('exit', () => server.close())
-    process.on('SIGTERM', () => server.close())
   })
 }

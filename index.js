@@ -37,6 +37,7 @@ let X
 let workspaces
 let current_workspace
 let current_window = null
+let screen
 let root
 let ewmh
 
@@ -70,12 +71,10 @@ function makeWorkspaces(screen, size) {
 
 function createClient() {
   x11.createClient((error, display) => {
-    const screen = display.screen[0]
+    screen = display.screen[0]
     root = screen.root
     X = global.X = display.client
     ewmh = new EWMH(X, root)
-
-    let start
 
     ewmh.on('CurrentDesktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
 
@@ -200,9 +199,22 @@ eventEmitter.on('cmd', cmd => {
         current_window.hide()
         current_workspace.show()
         break
+      case 'tile':
+        switch (match[2]) {
+        case 'left':
+          X.ResizeWindow(current_window.id, screen.pixel_width / 2, screen.pixel_height)
+          X.MoveWindow(current_window.id, 0, 0)
+          break
+        case 'right':
+          X.ResizeWindow(current_window.id, screen.pixel_width / 2, screen.pixel_height)
+          X.MoveWindow(current_window.id, screen.pixel_width / 2, 0)
+          break
+        case 'full':
+          X.ResizeWindow(current_window.id, screen.pixel_width / 2, screen.pixel_height)
+          X.MoveWindow(current_window.id, 0, 0)
+        }
     }
   }
-
   match = cmd.match(/^reload$/)
   if (match) {
     workspaces.forEach(workspace => workspace.hide())

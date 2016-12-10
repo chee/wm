@@ -210,7 +210,7 @@ eventEmitter.on('cmd', cmd => {
           X.MoveWindow(current_window.id, screen.pixel_width / 2, 0)
           break
         case 'full':
-          X.ResizeWindow(current_window.id, screen.pixel_width / 2, screen.pixel_height)
+          X.ResizeWindow(current_window.id, screen.pixel_width, screen.pixel_height)
           X.MoveWindow(current_window.id, 0, 0)
         }
     }

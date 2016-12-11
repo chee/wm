@@ -218,7 +218,7 @@ commandQueue.on('cmd', cmd => {
     workspaces.forEach(workspace => {
       workspace.windows.forEach(window => {
         Workspace.removeWindow(workspace, window)
-        Workspace.addWindow(home,window)
+        Workspace.addWindow(home, window)
       })
     })
     X.KillClient()

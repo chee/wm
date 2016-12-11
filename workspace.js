@@ -6,16 +6,14 @@ const create = id => ({
   currentWindow: null
 })
 
-// todo: maybe this should always take only ever a window
+// todo: this should throw if there's no window
 const addWindow = (workspace, window) => {
   if (!window) return
-  if (typeof window == 'number') {
-    window = Window.create(window)
-  }
   workspace.windows.push(window)
   Window.show(window)
 }
 
+// todo: this should throw if there's no window
 const removeWindow = (workspace, window) => {
   if (!window) return
   const {id} = window

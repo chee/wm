@@ -92,76 +92,68 @@ function createClient() {
       | x11.eventMask.EnterWindow
       | x11.eventMask.FocusChange
     }, console.error)
-  }).on('event', event => {
-    // todo: put all these event handlers in functions
-    // todo: it will fix the duplicate decls and be neater
-    // todo: perhaps emit each of these events from another emitter
-    switch(event.name) {
-    case 'KeyPress':
-      keybindings.forEach(binding => {
-        if (event.buttons == binding.buttons && event.keycode == binding.keycode) {
-          exec(binding.cmd, console.log)
-        }
-      })
-      break
-    case 'ButtonPress':
-      child = event.child
-      X.RaiseWindow(child)
-      currentWorkspace.currentWindow = Window.create(child)
-      Window.focus(currentWorkspace.currentWindow)
-      if (!Workspace.contains(currentWorkspace, currentWorkspace.currentWindow)) {
-        Workspace.addWindow(currentWorkspace, currentWorkspace.currentWindow)
-      }
-      X.GetGeometry(child, (error, attr) => {
-        start = event
-        attributes = attr
-      })
-      break
-    case 'MotionNotify':
-      if (!start) return
-      const xdiff = event.rootx - start.rootx
-      const ydiff = event.rooty - start.rooty
-      start.keycode == 1 && start.buttons == keys.buttons.M && X.MoveWindow(
-        start.child,
-        attributes.xPos + (start.keycode == 1 ? xdiff : 0),
-        attributes.yPos + (start.keycode == 1 ? ydiff : 0)
-      )
-      start.keycode == 3 && X.ResizeWindow(
-        start.child,
-        Math.max(1, attributes.width + (start.keycode == 3 ? xdiff : 0)),
-        Math.max(1, attributes.height + (start.keycode == 3 ? ydiff : 0))
-      )
-      break
-    case 'ButtonRelease':
-      start = null
-      break
-    case 'MapRequest':
-      X.GetWindowAttributes(event.wid, (error, attributes) => {
-        if (error) return console.error(error)
-        if (attributes[8]) {
-          return X.MapWindow(event.wid)
-        }
-      })
-      X.ChangeWindowAttributes(
-        event.wid,
-        {eventMask: x11.eventMask.EnterWindow}
-      )
-      let window = Window.create(event.wid)
-      Workspace.addWindow(currentWorkspace, window)
-      break
-    case 'FocusIn':
-    case 'EnterNotify':
-      child = event.wid
-      currentWorkspace.currentWindow = Window.create(child)
-      Window.focus(currentWorkspace.currentWindow)
-      break
-    case 'ConfigureRequest':
-      child = event.wid
-      X.ResizeWindow(event.wid, event.width, event.height)
-      break
-    }
-  }).on('error', console.error)
+  })
+  .on('event', event => xevents.emit(event.name, event))
+  .on('error', console.error)
 }
+
+function focus(event) {
+  currentWorkspace.currentWindow = Window.create(event.wid)
+  Window.focus(currentWorkspace.currentWindow)
+}
+
+// xevents
+xevents.on('KeyPress', event => {
+  keybindings.forEach(binding => {
+    if (event.buttons == binding.buttons && event.keycode == binding.keycode) {
+      exec(binding.cmd, console.log)
+    }
+  })
+}).on('ButtonPress', event => {
+  child = event.child
+  X.RaiseWindow(child)
+  currentWorkspace.currentWindow = Window.create(child)
+  Window.focus(currentWorkspace.currentWindow)
+  if (!Workspace.contains(currentWorkspace, currentWorkspace.currentWindow)) {
+    Workspace.addWindow(currentWorkspace, currentWorkspace.currentWindow)
+  }
+  X.GetGeometry(child, (error, attr) => {
+    start = event
+    attributes = attr
+  })
+}).on('MotionNotify', event => {
+  if (!start) return
+  const xdiff = event.rootx - start.rootx
+  const ydiff = event.rooty - start.rooty
+  start.keycode == 1 && start.buttons == keys.buttons.M && X.MoveWindow(
+    start.child,
+    attributes.xPos + (start.keycode == 1 ? xdiff : 0),
+    attributes.yPos + (start.keycode == 1 ? ydiff : 0)
+  )
+  start.keycode == 3 && X.ResizeWindow(
+    start.child,
+    Math.max(1, attributes.width + (start.keycode == 3 ? xdiff : 0)),
+    Math.max(1, attributes.height + (start.keycode == 3 ? ydiff : 0))
+  )
+}).on('ButtonRelease', () => start = null)
+.on('MapRequest', event => {
+  X.GetWindowAttributes(event.wid, (error, attributes) => {
+    if (error) return console.error(error)
+    if (attributes[8]) {
+      return X.MapWindow(event.wid)
+    }
+  })
+  X.ChangeWindowAttributes(
+    event.wid,
+    {eventMask: x11.eventMask.EnterWindow}
+  )
+  const window = Window.create(event.wid)
+  Workspace.addWindow(currentWorkspace, window)
+}).on('FocusIn', focus).on('EnterNotify', focus)
+.on('ConfigureRequest', event => {
+  child = event.wid
+  X.ResizeWindow(event.wid, event.width, event.height)
+})
 
 // commands
 commands.on('cmd', cmd => {

@@ -150,7 +150,6 @@ xevents.on('KeyPress', event => {
   Workspace.addWindow(currentWorkspace, window)
 }).on('FocusIn', focus).on('EnterNotify', focus)
 .on('ConfigureRequest', event => {
-  const child = event.wid
   X.ResizeWindow(event.wid, event.width, event.height)
 })
 
@@ -158,46 +157,43 @@ xevents.on('KeyPress', event => {
 commands.on('cmd', cmd => {
   let match = cmd.match(/workspace\s+(\w+)\s+(\d+)/)
 
-  if (match) {
-    switch (match[1]) {
-    case 'switch':
-      // todo: make this start showing the new windows before hiding the old ones
-      workspaces.forEach(workspace => Workspace.hide(workspace))
-      currentWorkspace = workspaces[constrainNumber(match[2] - 1, workspaces.length)]
-      Workspace.show(currentWorkspace, root)
-      break
-    }
+  // todo: `if (match) switch` is pretty psychedelic 🎇 (not in a good way)
+  if (match) switch (match[1]) {
+  case 'switch':
+    // todo: make this start showing the new windows before hiding the old ones
+    workspaces.forEach(workspace => Workspace.hide(workspace))
+    currentWorkspace = workspaces[constrainNumber(match[2] - 1, workspaces.length)]
+    Workspace.show(currentWorkspace, root)
+    break
   }
 
   match = cmd.match(/^window\s+(\w+)\s+([a-z0-9]+)/)
-  if (match) {
-    switch (match[1]) {
-    case 'destroy':
-      // todo: make this do something
+  if (match) switch (match[1]) {
+  case 'destroy':
+    // todo: make this do something
+    break
+  case 'move':
+    if (!currentWorkspace.currentWindow) break
+    // todo: remove only from currentWorkspace? (it shouldn't be on other workspaces, all being well (which it often isn't))
+    workspaces.forEach(workspace => Workspace.removeWindow(workspace, currentWorkspace.currentWindow))
+    Workspace.addWindow(workspaces[constrainNumber(match[2] - 1, workspaces.length)], currentWorkspace.currentWindow)
+    Window.hide(currentWorkspace.currentWindow)
+    currentWorkspace.currentWindow = null
+    Workspace.show(currentWorkspace)
+    break
+  case 'tile':
+    switch (match[2]) {
+    case 'left':
+      X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+      X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
       break
-    case 'move':
-      if (!currentWorkspace.currentWindow) break
-      // todo: remove only from currentWorkspace? (it shouldn't be on other workspaces, all being well (which it often isn't))
-      workspaces.forEach(workspace => Workspace.removeWindow(workspace, currentWorkspace.currentWindow))
-      Workspace.addWindow(workspaces[constrainNumber(match[2] - 1, workspaces.length)], currentWorkspace.currentWindow)
-      Window.hide(currentWorkspace.currentWindow)
-      currentWorkspace.currentWindow = null
-      Workspace.show(currentWorkspace)
+    case 'right':
+      X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+      X.MoveWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, 0)
       break
-    case 'tile':
-      switch (match[2]) {
-      case 'left':
-        X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-        X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
-        break
-      case 'right':
-        X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-        X.MoveWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, 0)
-        break
-      case 'full':
-        X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
-        X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
-      }
+    case 'full':
+      X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
+      X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
     }
   }
 

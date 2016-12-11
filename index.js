@@ -156,44 +156,46 @@ xevents.on('KeyPress', event => {
 // commands
 commands.on('cmd', cmd => {
   let match = cmd.match(/workspace\s+(\w+)\s+(\d+)/)
-
+  let windows = []
   // todo: `if (match) switch` is pretty psychedelic 🎇 (not in a good way)
   if (match) switch (match[1]) {
   case 'switch':
-    // todo: make this start showing the new windows before hiding the old ones
-    workspaces.forEach(workspace => Workspace.hide(workspace))
     currentWorkspace = workspaces[constrainNumber(match[2] - 1, workspaces.length)]
+    workspaces.filter(workspace => workspace.id != currentWorkspace.id).forEach(workspace => windows = windows.concat(workspace.windows))
     Workspace.show(currentWorkspace, root)
-    break
+    windows.forEach(Window.hide)
+    return
   }
 
   match = cmd.match(/^window\s+(\w+)\s+([a-z0-9]+)/)
   if (match) switch (match[1]) {
   case 'destroy':
     // todo: make this do something
-    break
+    X.DestroyWindow(currentWorkspace.currentWindow.id)
+    return
   case 'move':
-    if (!currentWorkspace.currentWindow) break
+    if (!currentWorkspace.currentWindow) return
     // todo: remove only from currentWorkspace? (it shouldn't be on other workspaces, all being well (which it often isn't))
     workspaces.forEach(workspace => Workspace.removeWindow(workspace, currentWorkspace.currentWindow))
     Workspace.addWindow(workspaces[constrainNumber(match[2] - 1, workspaces.length)], currentWorkspace.currentWindow)
     Window.hide(currentWorkspace.currentWindow)
     currentWorkspace.currentWindow = null
     Workspace.show(currentWorkspace)
-    break
+    return
   case 'tile':
     switch (match[2]) {
     case 'left':
       X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
       X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
-      break
+      return
     case 'right':
       X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
       X.MoveWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, 0)
-      break
+      return
     case 'full':
       X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
       X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
+      return
     }
   }
 

@@ -9,7 +9,8 @@ const Workspace = require('./workspace')
 const Window = require('./window')
 const listen = require('./srv')
 
-const commandQueue = new events.EventEmitter
+const commands = new events.EventEmitter
+const xevents = new events.EventEmitter
 
 const name = 'wm'
 const configuration = require('rc')(name)
@@ -163,7 +164,7 @@ function createClient() {
 }
 
 // commands
-commandQueue.on('cmd', cmd => {
+commands.on('cmd', cmd => {
   let match = cmd.match(/workspace\s+(\w+)\s+(\d+)/)
 
   if (match) {
@@ -178,11 +179,10 @@ commandQueue.on('cmd', cmd => {
   }
 
   match = cmd.match(/^window\s+(\w+)\s+([a-z0-9]+)/)
-
   if (match) {
     switch (match[1]) {
     case 'destroy':
-      // currentWorkspace.currentWindow?
+      // todo: make this do something
       break
     case 'move':
       if (!currentWorkspace.currentWindow) break
@@ -209,7 +209,8 @@ commandQueue.on('cmd', cmd => {
       }
     }
   }
-  // todo: make this just reload instead of killing the client
+
+  // todo: make this do something
   match = cmd.match(/^reload$/)
   if (match) {
     workspaces.forEach(workspace => Workspace.hide(workspace))
@@ -226,5 +227,5 @@ commandQueue.on('cmd', cmd => {
   }
 })
 
-listen(commandQueue)
+listen(commands)
 createClient()

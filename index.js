@@ -81,6 +81,16 @@ function createClient() {
 
     workspaces = makeWorkspaces(5)
     currentWorkspace = workspaces[0]
+
+    X.ChangeWindowAttributes(root, {
+      eventMask: x11.eventMask.SubstructureNotify
+      | x11.eventMask.SubstructureRedirect
+      | x11.eventMask.ResizeRedirect
+      | x11.eventMask.Exposure
+      | x11.eventMask.MapRequest
+      | x11.eventMask.EnterWindow
+      | x11.eventMask.FocusChange
+    }, console.error)
   }).on('event', event => {
     // todo: put all these event handlers in functions
     // todo: it will fix the duplicate decls and be neater
@@ -149,16 +159,6 @@ function createClient() {
       X.ResizeWindow(event.wid, event.width, event.height)
       break
     }
-
-    X.ChangeWindowAttributes(root, {
-      eventMask: x11.eventMask.SubstructureNotify
-      | x11.eventMask.SubstructureRedirect
-      | x11.eventMask.ResizeRedirect
-      | x11.eventMask.Exposure
-      | x11.eventMask.MapRequest
-      | x11.eventMask.EnterWindow
-      | x11.eventMask.FocusChange
-    }, console.error)
   }).on('error', console.error)
 }
 

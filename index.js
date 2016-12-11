@@ -32,7 +32,6 @@ const NOPE = 0
 process.env.PATH = `${dirname(process.argv[1])}/bin:${process.env.PATH}`
 
 let attributes
-let child
 let start
 let X
 let workspaces
@@ -110,7 +109,7 @@ xevents.on('KeyPress', event => {
     }
   })
 }).on('ButtonPress', event => {
-  child = event.child
+  const child = event.child
   X.RaiseWindow(child)
   currentWorkspace.currentWindow = Window.create(child)
   Window.focus(currentWorkspace.currentWindow)
@@ -151,7 +150,7 @@ xevents.on('KeyPress', event => {
   Workspace.addWindow(currentWorkspace, window)
 }).on('FocusIn', focus).on('EnterNotify', focus)
 .on('ConfigureRequest', event => {
-  child = event.wid
+  const child = event.wid
   X.ResizeWindow(event.wid, event.width, event.height)
 })
 

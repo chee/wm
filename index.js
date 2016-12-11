@@ -3,7 +3,7 @@ const {exec} = require('child_process')
 const events = require('events')
 const x11 = require('x11')
 
-const {stringToKeys} = require('./util')
+const {stringToKeys, constrainNumber} = require('./util')
 const keys = require('./lib/keys')
 const Workspace = require('./workspace')
 const Window = require('./window')
@@ -171,7 +171,7 @@ commandQueue.on('cmd', cmd => {
     case 'switch':
       // todo: make this start showing the new windows before hiding the old ones
       workspaces.forEach(workspace => Workspace.hide(workspace))
-      workspace = workspaces[match[2] - 1]
+      workspace = workspaces[constrainNumber(match[2] - 1, workspaces.length)]
       Workspace.show(workspace, root)
       break
     }
@@ -188,7 +188,7 @@ commandQueue.on('cmd', cmd => {
       // todo: remove only from current workspace?
       if (!workspace.currentWindow) break
       workspaces.forEach(workspace => Workspace.removeWindow(workspace, workspace.currentWindow))
-      Workspace.addWindow(workspaces[match[2] - 1], workspace.currentWindow)
+      Workspace.addWindow(workspaces[constrainNumber(match[2] - 1, workspaces.length)], workspace.currentWindow)
       Window.hide(workspace.currentWindow)
       workspace.currentWindow = null
       Workspace.show(workspace)

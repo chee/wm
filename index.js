@@ -35,7 +35,7 @@ let child
 let start
 let X
 let workspaces
-let workspace = null
+let currentWorkspace = null
 let screen
 let root
 
@@ -80,7 +80,7 @@ function createClient() {
     grabButtons(X)
 
     workspaces = makeWorkspaces(5)
-    workspace = workspaces[0]
+    currentWorkspace = workspaces[0]
   }).on('event', event => {
     // todo: put all these event handlers in functions
     // todo: it will fix the duplicate decls and be neater
@@ -96,10 +96,10 @@ function createClient() {
     case 'ButtonPress':
       child = event.child
       X.RaiseWindow(child)
-      workspace.currentWindow = Window.create(child)
-      Window.focus(workspace.currentWindow)
-      if (!Workspace.contains(workspace, workspace.currentWindow)) {
-        Workspace.addWindow(workspace, workspace.currentWindow)
+      currentWorkspace.currentWindow = Window.create(child)
+      Window.focus(currentWorkspace.currentWindow)
+      if (!Workspace.contains(currentWorkspace, currentWorkspace.currentWindow)) {
+        Workspace.addWindow(currentWorkspace, currentWorkspace.currentWindow)
       }
       X.GetGeometry(child, (error, attr) => {
         start = event
@@ -136,13 +136,13 @@ function createClient() {
         {eventMask: x11.eventMask.EnterWindow}
       )
       let window = Window.create(event.wid)
-      Workspace.addWindow(workspace, window)
+      Workspace.addWindow(currentWorkspace, window)
       break
     case 'FocusIn':
     case 'EnterNotify':
       child = event.wid
-      workspace.currentWindow = Window.create(child)
-      Window.focus(workspace.currentWindow)
+      currentWorkspace.currentWindow = Window.create(child)
+      Window.focus(currentWorkspace.currentWindow)
       break
     case 'ConfigureRequest':
       child = event.wid
@@ -171,8 +171,8 @@ commandQueue.on('cmd', cmd => {
     case 'switch':
       // todo: make this start showing the new windows before hiding the old ones
       workspaces.forEach(workspace => Workspace.hide(workspace))
-      workspace = workspaces[constrainNumber(match[2] - 1, workspaces.length)]
-      Workspace.show(workspace, root)
+      currentWorkspace = workspaces[constrainNumber(match[2] - 1, workspaces.length)]
+      Workspace.show(currentWorkspace, root)
       break
     }
   }
@@ -182,30 +182,30 @@ commandQueue.on('cmd', cmd => {
   if (match) {
     switch (match[1]) {
     case 'destroy':
-      // workspace.currentWindow?
+      // currentWorkspace.currentWindow?
       break
     case 'move':
-      // todo: remove only from current workspace?
-      if (!workspace.currentWindow) break
-      workspaces.forEach(workspace => Workspace.removeWindow(workspace, workspace.currentWindow))
-      Workspace.addWindow(workspaces[constrainNumber(match[2] - 1, workspaces.length)], workspace.currentWindow)
-      Window.hide(workspace.currentWindow)
-      workspace.currentWindow = null
-      Workspace.show(workspace)
+      if (!currentWorkspace.currentWindow) break
+      // todo: remove only from currentWorkspace? (it shouldn't be on other workspaces, all being well (which it often isn't))
+      workspaces.forEach(workspace => Workspace.removeWindow(workspace, currentWorkspace.currentWindow))
+      Workspace.addWindow(workspaces[constrainNumber(match[2] - 1, workspaces.length)], currentWorkspace.currentWindow)
+      Window.hide(currentWorkspace.currentWindow)
+      currentWorkspace.currentWindow = null
+      Workspace.show(currentWorkspace)
       break
     case 'tile':
       switch (match[2]) {
       case 'left':
-        X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-        X.MoveWindow(workspace.currentWindow.id, 0, 0)
+        X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+        X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
         break
       case 'right':
-        X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-        X.MoveWindow(workspace.currentWindow.id, screen.pixel_width / 2, 0)
+        X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
+        X.MoveWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, 0)
         break
       case 'full':
-        X.ResizeWindow(workspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
-        X.MoveWindow(workspace.currentWindow.id, 0, 0)
+        X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
+        X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
       }
     }
   }
@@ -213,12 +213,12 @@ commandQueue.on('cmd', cmd => {
   match = cmd.match(/^reload$/)
   if (match) {
     workspaces.forEach(workspace => Workspace.hide(workspace))
-    const home = workspace = workspaces[0]
+    currentWorkspace = workspaces[0]
     Workspace.show(home)
     workspaces.forEach(workspace => {
       workspace.windows.forEach(window => {
         Workspace.removeWindow(workspace, window)
-        Workspace.addWindow(home, window)
+        Workspace.addWindow(currentWorkspace, window)
       })
     })
     X.KillClient()

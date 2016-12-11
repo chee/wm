@@ -212,19 +212,6 @@ commands.on('cmd', cmd => {
 
   // todo: make this do something
   match = cmd.match(/^reload$/)
-  if (match) {
-    workspaces.forEach(workspace => Workspace.hide(workspace))
-    currentWorkspace = workspaces[0]
-    Workspace.show(home)
-    workspaces.forEach(workspace => {
-      workspace.windows.forEach(window => {
-        Workspace.removeWindow(workspace, window)
-        Workspace.addWindow(currentWorkspace, window)
-      })
-    })
-    X.KillClient()
-    createClient()
-  }
 })
 
 listen(commands)

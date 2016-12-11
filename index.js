@@ -2,7 +2,6 @@ const {dirname} = require('path')
 const {exec} = require('child_process')
 const events = require('events')
 const x11 = require('x11')
-const EWMH = require('ewmh')
 
 const {stringToKeys} = require('./util')
 const keys = require('./lib/keys')
@@ -39,7 +38,6 @@ let workspaces
 let workspace = null
 let screen
 let root
-let ewmh
 
 function grabKeys(X, bindings) {
   bindings.forEach(binding => {
@@ -78,20 +76,11 @@ function createClient() {
     screen = display.screen[0]
     root = screen.root
     X = global.X = display.client
-    ewmh = new EWMH(X, root)
-
-    ewmh.on('Desktop', desktop => exec(`notify-send "workspace switch ${desktop}"`))
-
     grabKeys(X, keybindings)
     grabButtons(X)
 
     workspaces = makeWorkspaces(5)
     workspace = workspaces[0]
-
-    ewmh.set_number_of_desktops(5, error => {
-      if (error) exec(`notify-send "${error}"`)
-      ewmh.set_current_desktop(0)
-    })
   }).on('event', event => {
     // todo: put all these event handlers in functions
     // todo: it will fix the duplicate decls and be neater
@@ -184,7 +173,6 @@ commandQueue.on('cmd', cmd => {
       workspaces.forEach(workspace => Workspace.hide(workspace))
       workspace = workspaces[match[2] - 1]
       Workspace.show(workspace, root)
-      ewmh.set_current_desktop(match[2] - 1)
       break
     }
   }
@@ -227,7 +215,6 @@ commandQueue.on('cmd', cmd => {
     workspaces.forEach(workspace => Workspace.hide(workspace))
     const home = workspace = workspaces[0]
     Workspace.show(home)
-    ewmh.set_current_desktop(0)
     workspaces.forEach(workspace => {
       workspace.windows.forEach(window => {
         Workspace.removeWindow(workspace, window)

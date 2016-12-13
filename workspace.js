@@ -20,9 +20,6 @@ const removeWindow = (workspace, window) => {
   workspace.windows = workspace.windows.filter(window => window.id != id)
 }
 
-// todo: should root be a global?
-// todo: should root be a *window*?
-// todo: this root argument definitely doesn't belong here
 const show = (workspace, root) => {
   workspace.currentWindow
     ? Window.focus(workspace.currentWindow)

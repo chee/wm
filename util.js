@@ -20,9 +20,18 @@ const constrainNumber = (number, max, min = 0) => (
   Math.max(Math.min(number, max), min)
 )
 
+const setupKeybindings = config => {
+  const bindings = []
+  mapObject(config.keybindings, (binding, cmd) => (
+    bindings.push(Object.assign({}, {cmd}, stringToKeys(binding)))
+  ))
+  return bindings
+}
+
 module.exports = {
   stringToKeys,
   or,
   mapObject,
-  constrainNumber
+  constrainNumber,
+  setupKeybindings
 }

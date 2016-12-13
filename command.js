@@ -13,7 +13,7 @@ module.exports = {
         previous.concat(current)
       )).forEach(Window.hide)
       global.currentWorkspace = target
-      Workspace.show(global.currentWorkspace, root)
+      Workspace.show(global.currentWorkspace)
     }
   },
   window: {

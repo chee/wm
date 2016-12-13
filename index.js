@@ -197,5 +197,5 @@ const Command = {
 
 commands.on('cmd', ({target, method, message}) => Command[target][method](message))
 
-listen(commands)
+listen({name, emitter: commands})
 createClient()

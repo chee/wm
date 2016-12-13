@@ -101,7 +101,7 @@ function focus(event) {
   Window.focus(currentWorkspace.currentWindow)
 }
 
-// xevents
+// X Events
 xevents.on('KeyPress', event => {
   keybindings.forEach(binding => {
     if (event.buttons == binding.buttons && event.keycode == binding.keycode) {
@@ -153,55 +153,47 @@ xevents.on('KeyPress', event => {
   X.ResizeWindow(event.wid, event.width, event.height)
 })
 
-// commands
-commands.on('cmd', cmd => {
-  let match = cmd.match(/workspace\s+(\w+)\s+(\d+)/)
-  let windows = []
-  // todo: `if (match) switch` is pretty psychedelic 🎇 (not in a good way)
-  if (match) switch (match[1]) {
-  case 'switch':
-    currentWorkspace = workspaces[constrainNumber(match[2] - 1, workspaces.length)]
-    workspaces.filter(workspace => workspace.id != currentWorkspace.id).forEach(workspace => windows = windows.concat(workspace.windows))
-    Workspace.show(currentWorkspace, root)
-    windows.forEach(Window.hide)
-    return
-  }
-
-  match = cmd.match(/^window\s+(\w+)\s+([a-z0-9]+)/)
-  if (match) switch (match[1]) {
-  case 'destroy':
-    // todo: make this do something
-    X.DestroyWindow(currentWorkspace.currentWindow.id)
-    return
-  case 'move':
-    if (!currentWorkspace.currentWindow) return
-    // todo: remove only from currentWorkspace? (it shouldn't be on other workspaces, all being well (which it often isn't))
-    workspaces.forEach(workspace => Workspace.removeWindow(workspace, currentWorkspace.currentWindow))
-    Workspace.addWindow(workspaces[constrainNumber(match[2] - 1, workspaces.length)], currentWorkspace.currentWindow)
-    Window.hide(currentWorkspace.currentWindow)
-    currentWorkspace.currentWindow = null
-    Workspace.show(currentWorkspace)
-    return
-  case 'tile':
-    switch (match[2]) {
-    case 'left':
-      X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-      X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
-      return
-    case 'right':
-      X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, screen.pixel_height)
-      X.MoveWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, 0)
-      return
-    case 'full':
-      X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
-      X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
-      return
+const Command = {
+  workspace: {
+    switch(id) {
+      workspaces.reduce((previous, current) => (
+        previous.windows
+        ? previous.windows.concat(current.windows)
+        : previous.concat(current.windows)
+      )).forEach(Window.hide)
+      currentWorkspace = workspaces[constrainNumber(id - 1, workspaces.length)]
+      Workspace.show(currentWorkspace, root)
+    }
+  },
+  window: {
+    destroy() {
+      // why doesn't this work?
+      X.DestroyWindow(currentWorkspace.currentWindow.id)
+    },
+    move(id) {
+      const window = currentWorkspace.currentWindow
+      const target = workspaces[constrainNumber(id - 1, workspaces.length)]
+      Workspace.removeWindow(currentWorkspace, window)
+      Workspace.addWindow(target, window)
+      Window.hide(window)
+      currentWorkspace.currentWindow = null
+    },
+    tile(direction) {
+      const id = currentWorkspace.currentWindow.id
+      if (direction == 'left' || direction == 'right') {
+        X.ResizeWindow(id, screen.pixel_width / 2, screen.pixel_height)
+        direction == 'left'
+        ? X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
+        : X.MoveWindow(currentWorkspace.currentWindow.id, screen.pixel_width / 2, 0)
+      } else if (direction == 'full') {
+        X.ResizeWindow(currentWorkspace.currentWindow.id, screen.pixel_width, screen.pixel_height)
+        X.MoveWindow(currentWorkspace.currentWindow.id, 0, 0)
+      }
     }
   }
+}
 
-  // todo: make this do something
-  match = cmd.match(/^reload$/)
-})
+commands.on('cmd', ({target, method, message}) => Command[target][method](message))
 
 listen(commands)
 createClient()

@@ -7,7 +7,10 @@ module.exports = eventEmitter => {
   fs.unlink(path, () => {
     const server = net.createServer(connection => {
       connection.on('data', data => {
-        eventEmitter.emit('cmd', data.toString())
+        const match = data.toString().match(/^(\S+)\s*(\S*)\s*(\S*)/)
+        if (!match) return
+        const [, target, method, message] = match
+        eventEmitter.emit('cmd', {target, method, message})
       })
     }).listen(path, () => {
       console.log('server bound on %s', path)

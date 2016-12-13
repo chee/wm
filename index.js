@@ -151,6 +151,9 @@ xevents.on('KeyPress', event => {
 }).on('FocusIn', focus).on('EnterNotify', focus)
 .on('ConfigureRequest', event => {
   X.ResizeWindow(event.wid, event.width, event.height)
+}).on('DestroyNotify', event => {
+  const window = Window.create(event.wid)
+  workspaces.forEach(workspace => Workspace.removeWindow(workspace, window))
 })
 
 const Command = {
@@ -167,15 +170,14 @@ const Command = {
   },
   window: {
     destroy() {
-      // why doesn't this work?
       X.DestroyWindow(currentWorkspace.currentWindow.id)
     },
     move(id) {
       const window = currentWorkspace.currentWindow
       const target = workspaces[constrainNumber(id - 1, workspaces.length)]
       Workspace.removeWindow(currentWorkspace, window)
-      Workspace.addWindow(target, window)
       Window.hide(window)
+      Workspace.addWindow(target, window)
       currentWorkspace.currentWindow = null
     },
     tile(direction) {

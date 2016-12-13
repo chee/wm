@@ -20,9 +20,9 @@ const constrainNumber = (number, max, min = 0) => (
   Math.max(Math.min(number, max), min)
 )
 
-const setupKeybindings = config => {
+const setupKeybindings = keybindingConfig => {
   const bindings = []
-  mapObject(config.keybindings, (binding, cmd) => (
+  mapObject(keybindingConfig, (binding, cmd) => (
     bindings.push(Object.assign({}, {cmd}, stringToKeys(binding)))
   ))
   return bindings

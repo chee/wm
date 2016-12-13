@@ -18,6 +18,40 @@ const NOPE = 0
 
 process.env.PATH = `${dirname(process.argv[1])}/bin:${process.env.PATH}`
 
+// globals are: X, screen, root, keybindings, workspaces & currentWorkspace
+function createClient() {
+  x11.createClient((error, display) => {
+    const configuration = require('rc')(name)
+    global.screen = display.screen[0]
+    global.root = global.screen.root
+    global.X = display.client
+
+    // todo: ungrab old keys
+    global.keybindings = setupKeybindings(configuration.keybindings)
+    global.workspaces = makeWorkspaces(configuration.settings ? configuration.settings.workspaces : 5)
+    global.currentWorkspace = global.workspaces[0]
+
+    grabKeys(global.X, global.keybindings)
+    grabButtons(global.X)
+
+    global.X.ChangeWindowAttributes(global.root, {
+      eventMask: x11.eventMask.SubstructureNotify
+      | x11.eventMask.SubstructureRedirect
+      | x11.eventMask.ResizeRedirect
+      | x11.eventMask.Exposure
+      | x11.eventMask.MapRequest
+      | x11.eventMask.EnterWindow
+      | x11.eventMask.FocusChange
+    }, console.error)
+  })
+  .on('event', event => {
+    Event[event.name]
+    ? Event[event.name](event)
+    : console.warn(`unhandled event: ${event.name}`)
+  })
+  .on('error', console.error)
+}
+
 function grabKeys(X, bindings) {
   bindings.forEach(binding => {
     X.GrabKey(global.root, true,
@@ -41,45 +75,12 @@ function grabButtons(X) {
   )
 }
 
-// todo: make this size configurable
 function makeWorkspaces(size) {
   const workspaces = []
   for (let id = 0; id < size; id++) {
     workspaces.push(Workspace.create(id))
   }
   return workspaces
-}
-
-function createClient() {
-  x11.createClient((error, display) => {
-    global.screen = display.screen[0]
-    global.root = global.screen.root
-    global.X = display.client
-
-    // todo: ungrab old keys
-    global.keybindings = setupKeybindings(require('rc')(name))
-    global.workspaces = makeWorkspaces(5)
-    global.currentWorkspace = global.workspaces[0]
-
-    grabKeys(global.X, global.keybindings)
-    grabButtons(global.X)
-
-    global.X.ChangeWindowAttributes(global.root, {
-      eventMask: x11.eventMask.SubstructureNotify
-      | x11.eventMask.SubstructureRedirect
-      | x11.eventMask.ResizeRedirect
-      | x11.eventMask.Exposure
-      | x11.eventMask.MapRequest
-      | x11.eventMask.EnterWindow
-      | x11.eventMask.FocusChange
-    }, console.error)
-  })
-  .on('event', event => {
-    Event[event.name]
-    ? Event[event.name](event)
-    : console.warn(`unhandled event: ${event.name}`)
-  })
-  .on('error', console.error)
 }
 
 emitter.on('cmd', ({target, method, message}) => (

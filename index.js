@@ -156,10 +156,10 @@ xevents.on('KeyPress', event => {
 const Command = {
   workspace: {
     switch(id) {
-      workspaces.reduce((previous, current) => (
-        previous.windows
-        ? previous.windows.concat(current.windows)
-        : previous.concat(current.windows)
+      workspaces.map(workspace => (
+        workspace.windows
+      )).reduce((previous, current) => (
+        previous.concat(current)
       )).forEach(Window.hide)
       currentWorkspace = workspaces[constrainNumber(id - 1, workspaces.length)]
       Workspace.show(currentWorkspace, root)

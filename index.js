@@ -3,7 +3,7 @@ const {exec} = require('child_process')
 const events = require('events')
 const x11 = require('x11')
 
-const {stringToKeys, constrainNumber} = require('./util')
+const {stringToKeys, constrainNumber, mapObject} = require('./util')
 const keys = require('./lib/keys')
 const Workspace = require('./workspace')
 const Window = require('./window')
@@ -13,18 +13,6 @@ const commands = new events.EventEmitter
 const xevents = new events.EventEmitter
 
 const name = 'wm'
-const configuration = require('rc')(name)
-
-// todo: fix this completely
-const keybindings = (() => {
-  const keybindings = []
-  for (const binding in configuration.keybindings) {
-    keybindings.push(Object.assign({}, {
-      cmd: configuration.keybindings[binding]
-    }, stringToKeys(binding)))
-  }
-  return keybindings
-})()
 
 const ASYNC = 1
 const NOPE = 0
@@ -38,6 +26,15 @@ let workspaces
 let currentWorkspace = null
 let screen
 let root
+let keybindings
+
+function setupKeybindings(config) {
+  const bindings = []
+  mapObject(config.keybindings, (binding, cmd) => (
+    bindings.push(Object.assign({}, {cmd}, stringToKeys(binding)))
+  ))
+  return bindings
+}
 
 function grabKeys(X, bindings) {
   bindings.forEach(binding => {
@@ -76,11 +73,14 @@ function createClient() {
     screen = display.screen[0]
     root = screen.root
     X = global.X = display.client
-    grabKeys(X, keybindings)
-    grabButtons(X)
 
+    // todo: ungrab old keys
+    keybindings = setupKeybindings(require('rc')(name))
     workspaces = makeWorkspaces(5)
     currentWorkspace = workspaces[0]
+
+    grabKeys(X, keybindings)
+    grabButtons(X)
 
     X.ChangeWindowAttributes(root, {
       eventMask: x11.eventMask.SubstructureNotify

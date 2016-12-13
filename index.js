@@ -2,12 +2,12 @@ const {dirname} = require('path')
 const events = require('events')
 const x11 = require('x11')
 
-const {setupKeybindings} = require('./util')
+const {setupKeybindings} = require('./src/util')
 const keys = require('./lib/keys')
-const Command = require('./command')
-const Event = require('./event')
-const Workspace = require('./workspace')
-const listen = require('./srv')
+const Command = require('./src/command')
+const Event = require('./src/event')
+const Workspace = require('./src/workspace')
+const listen = require('./src/srv')
 
 const emitter = new events.EventEmitter
 

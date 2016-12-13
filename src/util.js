@@ -1,4 +1,4 @@
-const keys = require('./lib/keys')
+const keys = require('../lib/keys')
 
 const or = (previous, current) => previous | current
 

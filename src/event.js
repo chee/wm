@@ -3,7 +3,7 @@ const x11 = require('x11')
 
 const Workspace = require('./workspace')
 const Window = require('./window')
-const keys = require('./lib/keys')
+const keys = require('../lib/keys')
 
 let start
 let attributes

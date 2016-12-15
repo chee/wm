@@ -40,6 +40,9 @@ module.exports = {
         global.X.ResizeWindow(global.currentWorkspace.currentWindow.id, global.screen.pixel_width, global.screen.pixel_height)
         global.X.MoveWindow(global.currentWorkspace.currentWindow.id, 0, 0)
       }
+    },
+    'toggle-pinning'() {
+      Window.togglePinning(global.currentWorkspace.currentWindow)
     }
   }
 }

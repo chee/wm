@@ -1,7 +1,7 @@
 const create = id => ({
   id,
-  workspace: null,
-  shown: false
+  shown: false,
+  pinned: false
 })
 
 const show = window => {
@@ -20,4 +20,8 @@ const focus = window => {
   global.X.SetInputFocus(window.id)
 }
 
-module.exports = {create, show, hide, focus}
+const togglePinning = window => {
+  window.pinned = !window.pinned
+}
+
+module.exports = {create, show, hide, focus, togglePinning}

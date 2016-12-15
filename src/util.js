@@ -1,4 +1,5 @@
 const keys = require('../lib/keys')
+const Window = require('./window')
 
 const or = (previous, current) => previous | current
 
@@ -28,10 +29,25 @@ const setupKeybindings = keybindingConfig => {
   return bindings
 }
 
+// todo: maybe these should live somewhere else. WM.?
+const getAllWindows = () => (
+  global.workspaces.map(workspace => (
+    workspace.windows
+  )).reduce((previous, current) => (
+    previous.concat(current)
+  ))
+)
+
+const getWindow = id => (
+  getAllWindows().filter(window => window.id == id)[0] || Window.create(id)
+)
+
 module.exports = {
   stringToKeys,
   or,
   mapObject,
   constrainNumber,
-  setupKeybindings
+  setupKeybindings,
+  getAllWindows,
+  getWindow
 }

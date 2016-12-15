@@ -1,17 +1,13 @@
 const Window = require('./window')
 const Workspace = require('./workspace')
-const {constrainNumber} = require('./util')
+const {constrainNumber, getAllWindows} = require('./util')
 
 module.exports = {
   workspace: {
     switch(id) {
       const target = global.workspaces[constrainNumber(id - 1, global.workspaces.length)]
       if (global.currentWorkspace.id == target.id) return
-      global.workspaces.map(workspace => (
-        workspace.windows
-      )).reduce((previous, current) => (
-        previous.concat(current)
-      )).forEach(Window.hide)
+      getAllWindows().filter(window => !window.pinned).forEach(Window.hide)
       global.currentWorkspace = target
       Workspace.show(global.currentWorkspace)
     }
@@ -42,7 +38,17 @@ module.exports = {
       }
     },
     'toggle-pinning'() {
-      Window.togglePinning(global.currentWorkspace.currentWindow)
+      const workspace = global.currentWorkspace
+      const window = workspace.currentWindow
+      if (window.id == global.root.id) return
+      global.workspaces.forEach(workspace => {
+        Workspace.removeWindow(workspace, window)
+      })
+      Workspace.addWindow(workspace, window)
+      window.pinned = !window.pinned
+      window.pinned && global.workspaces.forEach(workspace => {
+        workspace.currentWindow = window
+      })
     }
   }
 }

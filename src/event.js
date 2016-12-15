@@ -4,6 +4,7 @@ const x11 = require('x11')
 const Workspace = require('./workspace')
 const Window = require('./window')
 const keys = require('../lib/keys')
+const {getWindow} = require('./util')
 
 let start
 let attributes
@@ -18,7 +19,7 @@ module.exports = {
   ButtonPress(event) {
     const {child} = event
     global.X.RaiseWindow(child)
-    global.currentWorkspace.currentWindow = Window.create(child)
+    global.currentWorkspace.currentWindow = getWindow(child)
     Window.focus(global.currentWorkspace.currentWindow)
     if (!Workspace.contains(global.currentWorkspace, global.currentWorkspace.currentWindow)) {
       Workspace.addWindow(global.currentWorkspace, global.currentWorkspace.currentWindow)
@@ -61,18 +62,21 @@ module.exports = {
     Workspace.addWindow(global.currentWorkspace, window)
   },
   FocusIn(event) {
-    global.currentWorkspace.currentWindow = Window.create(event.wid)
+    console.log('getwindow1', getWindow(event.wid))
+    global.currentWorkspace.currentWindow = getWindow(event.wid)
     Window.focus(global.currentWorkspace.currentWindow)
   },
   EnterNotify(event) {
-    const window = global.currentWorkspace.currentWindow = Window.create(event.wid)
+    console.log('getwindow2', getWindow(event.wid))
+    const window = global.currentWorkspace.currentWindow = getWindow(event.wid)
     Window.focus(window)
   },
   ConfigureRequest({wid, width, height}) {
     global.X.ResizeWindow(wid, width, height)
   },
   DestroyNotify({wid}) {
-    const window = Window.create(wid)
+    const window = getWindow(wid)
+    // todo: if windows kept track of their workspace, this would not be necessary
     global.workspaces.forEach(workspace => Workspace.removeWindow(workspace, window))
   }
 }

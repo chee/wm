@@ -20,8 +20,4 @@ const focus = window => {
   global.X.SetInputFocus(window.id)
 }
 
-const togglePinning = window => {
-  window.pinned = !window.pinned
-}
-
-module.exports = {create, show, hide, focus, togglePinning}
+module.exports = {create, show, hide, focus}

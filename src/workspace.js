@@ -20,7 +20,7 @@ const removeWindow = (workspace, window) => {
   workspace.windows = workspace.windows.filter(window => window.id != id)
 }
 
-const show = (workspace) => {
+const show = workspace => {
   workspace.currentWindow
     ? Window.focus(workspace.currentWindow)
     : global.X.SetInputFocus(global.root)

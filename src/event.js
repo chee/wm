@@ -65,8 +65,8 @@ module.exports = {
     Window.focus(global.currentWorkspace.currentWindow)
   },
   EnterNotify(event) {
-    global.currentWorkspace.currentWindow = Window.create(event.wid)
-    Window.focus(global.currentWorkspace.currentWindow)
+    const window = global.currentWorkspace.currentWindow = Window.create(event.wid)
+    Window.focus(window)
   },
   ConfigureRequest({wid, width, height}) {
     global.X.ResizeWindow(wid, width, height)

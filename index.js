@@ -28,7 +28,11 @@ function createClient() {
 
     // todo: ungrab old keys
     global.keybindings = setupKeybindings(configuration.keybindings)
-    global.workspaces = makeWorkspaces(configuration.settings ? configuration.settings.workspaces : 5)
+    global.workspaces = makeWorkspaces(
+      configuration.settings && configuration.settings.workspaces
+      ? configuration.settings.workspaces
+      : 5
+    )
     global.currentWorkspace = global.workspaces[0]
 
     grabKeys(global.X, global.keybindings)

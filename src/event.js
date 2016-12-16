@@ -62,12 +62,10 @@ module.exports = {
     Workspace.addWindow(global.currentWorkspace, window)
   },
   FocusIn(event) {
-    console.log('getwindow1', getWindow(event.wid))
     global.currentWorkspace.currentWindow = getWindow(event.wid)
     Window.focus(global.currentWorkspace.currentWindow)
   },
   EnterNotify(event) {
-    console.log('getwindow2', getWindow(event.wid))
     const window = global.currentWorkspace.currentWindow = getWindow(event.wid)
     Window.focus(window)
   },

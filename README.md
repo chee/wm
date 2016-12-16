@@ -44,6 +44,12 @@ M-A-j window resize y+10
 M-A-k window resize y-10
 M-A-l window resize x+10
 
+# window move
+M-C-h window move x-10
+M-C-j window move y+10
+M-C-k window move y-10
+M-C-l window move x+10
+
 # window tile
 M-A-comma = window tile left
 M-A-period = window tile right

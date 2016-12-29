@@ -1,8 +1,10 @@
 const Window = require('./window')
 const Workspace = require('./workspace')
 const {constrainNumber, getAllWindows} = require('./util')
+const bind = require('./bind')
 
 module.exports = {
+  wm: { reload: bind },
   workspace: {
     switch(id) {
       const target = global.workspaces[constrainNumber(id - 1, global.workspaces.length)]

@@ -1,2 +1,2 @@
 #!/bin/sh
-echo -n reload | nc -U /tmp/wm
+echo -n wm reload | nc -U /tmp/wm

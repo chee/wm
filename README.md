@@ -78,6 +78,5 @@ modifier keys are uppercase:
 
 all letters are lower case. special keys available so far
 are `space`, `return`, `period` and `comma` and `tab`.
-also supports the volume keys (`XF86AudioLowerVolume`,
-`XF86AudioRaiseVolume`) but no other media keys right now.
-(not for any good reason)
+also supports media keys (play, next, prev, kbd brightness (up|down),
+brightness).

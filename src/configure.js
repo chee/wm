@@ -1,6 +1,6 @@
 const {setupKeybindings} = require('./util')
 const keys = require('../lib/keys')
-const Workspace = require('./src/workspace')
+const Workspace = require('./workspace')
 const x11 = require('x11')
 
 const ASYNC = 1

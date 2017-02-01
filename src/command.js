@@ -30,11 +30,18 @@ module.exports = {
     tile(direction) {
       const id = global.currentWorkspace.currentWindow.id
       const {pixel_width, pixel_height} = global.screen
+      let match = null
       if (direction == 'left' || direction == 'right') {
         global.X.ResizeWindow(id, pixel_width / 2, pixel_height)
         direction == 'left'
         ? global.X.MoveWindow(id, 0, 0)
         : global.X.MoveWindow(id, pixel_width / 2, 0)
+      } else if ((match = direction.match(/^(top)-(\w+)/)) || (match = direction.match(/^(bottom)-(\w+)/))) {
+        const [, vertical, horizontal] = match
+        global.X.ResizeWindow(id, pixel_width / 2, pixel_height / 2)
+        vertical == 'top'
+        ? horizontal == 'left' ? global.X.MoveWindow(id, 0, 0) : global.X.MoveWindow(id, pixel_width / 2, 0)
+        : horizontal == 'left' ? global.X.MoveWindow(id, 0, pixel_height / 2) : global.X.MoveWindow(id, pixel_width / 2, pixel_height / 2)
       } else if (direction == 'full') {
         global.X.ResizeWindow(id, pixel_width, pixel_height)
         global.X.MoveWindow(id, 0, 0)

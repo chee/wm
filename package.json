@@ -4,7 +4,7 @@
 	"description": "window manager",
 	"main": "index.js",
 	"author": "chee <chee@snake.dog>",
-	"license": "GPL",
+	"license": "GPL-3.0",
 	"dependencies": {
 		"ewmh": "^0.3.0",
 		"rc": "^1.1.6",

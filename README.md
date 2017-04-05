@@ -19,7 +19,8 @@ here's an example of a `~/.wmrc`:
 ```ini
 [keybindings]
 M-return = termite
-M-p = rofi-pass
+M-A-e = rofi-emoji
+M-A-p = rofi-pass
 M-space = rofi -show drun -display-drun '' -font 'source code pro 20'	-separator-style 'none'
 XF86AudioLowerVolume = ponymix decrease 10 -N
 XF86AudioRaiseVolume = ponymix increase 10 -N
@@ -30,6 +31,13 @@ M-S-2 = window workspace 2
 M-S-3 = window workspace 3
 M-S-4 = window workspace 4
 M-S-5 = window workspace 5
+M-S-6 = window workspace 6
+M-S-7 = window workspace 7
+M-S-8 = window workspace 8
+M-S-9 = window workspace 9
+M-S-0 = window workspace 10
+M-S-minus = window workspace 11
+M-S-equal = window workspace 12
 
 # workspace switch
 M-1 = workspace switch 1
@@ -37,23 +45,40 @@ M-2 = workspace switch 2
 M-3 = workspace switch 3
 M-4 = workspace switch 4
 M-5 = workspace switch 5
+M-6 = workspace switch 6
+M-7 = workspace switch 7
+M-8 = workspace switch 8
+M-9 = workspace switch 9
+M-0 = workspace switch 10
+M-minus = workspace switch 11
+M-equal = workspace switch 12
 
 # window resize
-M-A-h window resize x-10
-M-A-j window resize y+10
-M-A-k window resize y-10
-M-A-l window resize x+10
+M-A-h = window resize x-10
+M-A-j = window resize y+10
+M-A-k = window resize y-10
+M-A-l = window resize x+10
 
 # window move
-M-C-h window move x-10
-M-C-j window move y+10
-M-C-k window move y-10
-M-C-l window move x+10
+M-C-h = window move x-10
+M-C-j = window move y+10
+M-C-k = window move y-10
+M-C-l = window move x+10
 
 # window tile
 M-A-comma = window tile left
 M-A-period = window tile right
 M-A-f = window tile full
+M-A-q = window tile top-left
+M-A-w = window tile top-right
+M-A-a = window tile bottom-left
+M-A-s = window tile bottom-right
+
+# window misc
+M-period = window toggle-pinning
+
+[settings]
+workspaces = 10
 ```
 
 now you notice `window workspace 1` and `workspace switch 1`

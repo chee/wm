@@ -1,19 +1,19 @@
 {
-	"name": "wm",
-	"version": "1.0.0",
-	"description": "window manager",
-	"main": "index.js",
-	"author": "chee <chee@snake.dog>",
-	"license": "GPL-3.0",
-	"dependencies": {
-		"ewmh": "^0.3.0",
-		"rc": "^1.1.6",
-		"x11": "^2.2.0"
-	},
-	"scripts": {
-		"start": "node index.js"
-	},
-	"devDependencies": {
-		"standard": "^10.0.2"
-	}
+  "name": "wm",
+  "version": "1.0.0",
+  "description": "window manager",
+  "main": "index.js",
+  "author": "chee <chee@snake.dog>",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "ewmh": "^0.3.0",
+    "rc": "^1.1.6",
+    "x11": "^2.2.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "devDependencies": {
+    "standard": "^10.0.2"
+  }
 }

@@ -9,13 +9,16 @@ const configure = require('./src/configure')
 
 const name = require('./lib/name')
 
-const emitter = new events.EventEmitter
+const emitter = new events.EventEmitter()
 
 process.env.PATH = `${dirname(process.argv[1])}/bin:${process.env.PATH}`
 
 // globals are: X, screen, root, keybindings, workspaces & currentWorkspace
-function createClient() {
+function createClient () {
   x11.createClient((error, display) => {
+    if (error) {
+      console.error('error:', error)
+    }
     global.screen = display.screen[0]
     global.root = global.screen.root
     global.X = display.client

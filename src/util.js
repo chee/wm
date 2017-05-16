@@ -39,7 +39,7 @@ const getAllWindows = () => (
 )
 
 const getWindow = id => (
-  getAllWindows().filter(window => window.id == id)[0] || Window.create(id)
+  getAllWindows().filter(window => window.id === id)[0] || Window.create(id)
 )
 
 module.exports = {

@@ -21,7 +21,7 @@ here's an example of a `~/.wmrc`:
 M-return = termite
 M-A-e = rofi-emoji
 M-A-p = rofi-pass
-M-space = rofi -show drun -display-drun '' -font 'source code pro 20'	-separator-style 'none'
+M-space = rofi -show drun -display-drun '' -font 'source code pro 20'  -separator-style 'none'
 XF86AudioLowerVolume = ponymix decrease 10 -N
 XF86AudioRaiseVolume = ponymix increase 10 -N
 

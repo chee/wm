@@ -17,7 +17,7 @@ const addWindow = (workspace, window) => {
 const removeWindow = (workspace, window) => {
   if (!window) return
   const {id} = window
-  workspace.windows = workspace.windows.filter(window => window.id != id)
+  workspace.windows = workspace.windows.filter(window => window.id !== id)
 }
 
 const show = workspace => {
@@ -33,7 +33,7 @@ const hide = workspace => {
 
 const contains = (workspace, window) => {
   const {id} = window
-  return workspace.windows.some(window => window.id == id)
+  return workspace.windows.some(window => window.id === id)
 }
 
 module.exports = {create, addWindow, removeWindow, show, hide, contains}

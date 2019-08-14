@@ -1,1 +1,1 @@
-Any further development on wm will happen on https://git.snoot.club/chee/wm.git
+Any further development of wm will happen on https://git.snoot.club/chee/wm

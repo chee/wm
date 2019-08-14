@@ -1,2 +1,0 @@
-#!/bin/sh
-echo "window $*" | nc -U /tmp/wm

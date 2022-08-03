@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "window manager",
   "main": "index.js",
-  "author": "chee <chee@snake.dog>",
+  "author": "chee <yay@chee.party>",
   "license": "GPL-3.0",
   "dependencies": {
     "ewmh": "^0.3.0",
